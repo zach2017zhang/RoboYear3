@@ -104,7 +104,7 @@ def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
     "*** YOUR CODE HERE ***"
     Open = util.Queue()
-    #end_state,previous_states,path,cost
+    #end_state,previous_states,path
     Open.push((problem.getStartState(),[problem.getStartState()],[]))
     Close = []
     Discovered = [problem.getStartState()]

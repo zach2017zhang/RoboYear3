@@ -288,7 +288,11 @@ class CornersProblem(search.SearchProblem):
         # Please add any code here which you would like to use
         # in initializing the problem
         "*** YOUR CODE HERE ***"
-        self.startState = (self.startingPosition[0],self.startingPosition[1],0)
+        initial_cornerflags = {(1,1):False, (1,top):False, (right, 1):False, (right, top):False}
+        if self.startingPosition in self.corners:
+            initial_cornerflags[self.startingPosition] = True
+        self.startState = (self.startingPosition[0],self.startingPosition[1],initial_cornerflags)
+        self.goal_cornerflags = {(1,1):True, (1,top):True, (right, 1):True, (right, top):True}
 
     def getStartState(self):
         """
@@ -304,7 +308,7 @@ class CornersProblem(search.SearchProblem):
         Returns whether this search state is a goal state of the problem.
         """
         "*** YOUR CODE HERE ***"
-        return state == (self.corners[0][0],self.corners[0][1],4) or (self.corners[1][0],self.corners[1][1],4) or (self.corners[2][0],self.corners[2][1],4) or (self.corners[3][0],self.corners[3][1],4)
+        return state == ((self.corners[0][0],self.corners[0][1],self.goal_cornerflags) or (self.corners[1][0],self.corners[1][1],self.goal_cornerflags) or (self.corners[2][0],self.corners[2][1],self.goal_cornerflags) or (self.corners[3][0],self.corners[3][1],self.goal_cornerflags))
         #util.raiseNotDefined()
 
     def getSuccessors(self, state):
@@ -328,7 +332,15 @@ class CornersProblem(search.SearchProblem):
             #   hitsWall = self.walls[nextx][nexty]
 
             "*** YOUR CODE HERE ***"
-
+            x,y = state[0],state[1]
+            cornerflags = state[2].copy()
+            dx, dy = Actions.directionToVector(action)
+            nextx, nexty = int(x + dx), int(y + dy)
+            if not self.walls[nextx][nexty]:
+                if ((nextx, nexty) in self.corners) and (not cornerflags[(nextx, nexty)]):
+                    cornerflags[(nextx, nexty)] = True
+                nextState = (nextx, nexty,cornerflags)
+                successors.append( ( nextState, action, 1) )
         self._expanded += 1 # DO NOT CHANGE
         return successors
 
