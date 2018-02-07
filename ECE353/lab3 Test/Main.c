@@ -136,7 +136,8 @@ code Main
 		while status[(p+4)%5]==EATING || status[(p+1)%5]==EATING
 		  condition.Wait(&mutex)
 		endWhile
-		status[p]=EATING
+		status[p] = EATING
+		print p
 		self.PrintAllStatus()
 		mutex.Unlock()
       endMethod
