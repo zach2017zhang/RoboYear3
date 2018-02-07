@@ -111,6 +111,7 @@ code Synch
              heldBy = currentThread
            else
              waitingThreads.AddToEnd (currentThread)
+              print ("cant get lock go to sleep\n")
              currentThread.Sleep ()
            endIf
            oldIntStat = SetInterruptsTo (oldIntStat)
