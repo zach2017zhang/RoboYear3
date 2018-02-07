@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<body>
+<pre>(Q1)
+(1a)
+If Pacman is in the corner, the branching factor of the successor function is 2. Because there are only two directions (at most) Pacman can go for the next step. For example, if Pacman is at the left bottom corner, it can only go right or up for the next step.
+
+(1b)
+If Pacman is in the middle, the branching factor of the successor function is 4. Because Pacman can go along any of the four directions (left, right, up, down) for the next step as long as there is no wall (barrier).
+
+(1c)
+Using DFS, the maximum possible depth of the search space is N^2-1. For example, the initial position is at the left top corner and the goal position is at the right bottom corner. The node is expanded in the following order: South, North, East, West. In this case, the path found includes moving to all positions inside the maze except the initial position (i.e. N^2-1).
+Using BFS, the maximum possible depth of the search space is 2N-2. This is because BFS always finds the shortest path between 2 positions. When Pacman is in an NxN maze with no interior walls, the shortest distance between 2 positions can be at most 2N-2 and it happens when the initial position is at a corner and the goal position is at the corner that is diagonally opposite to the initial position.
+
+
+(Q2)
+(2a)
+The max number of paths on the OPEN list is n = 4^(ctotal/cmin+1)-4.
+Note that ctotal/cmin is the maximum possible depth of the path. In the worst case (such as h(n)=0 for all n), A* search is nearly equivalent to BFS. As mentioned in lecture, the worst case (i.e. maximum number of paths stored on the OPEN list) happens when the goal node is the last node to be expanded in its depth level. At that level, there are 4^(ctotal/cmin) nodes at most. Expanding all of them except the last one stores 4*(4^(ctotal/cmin+1)-1)=4^(ctotal/cmin+1)-4 paths on the OPEN list.
+
+(2b)
+The bound on the total cost of the solution that can be guaranteed to find is ctotal = cmin*((log_4[n+4])-1). 
+This result is got by directly inverting the result in (2a). Once we know how to compute maximum number of paths stored on the OPEN list given total cost ctotal, we can go in the opposite direction and compute minimum total cost of the solution given n paths on the OPEN list.
+Rearranging the result from (2a), we have that
+	n = 4*(4^(ctotal/cmin)-1) =&gt; (n+4)/4=4^(ctotal/cmin+1) =&gt; ctotal = cmin*((log_4[n+4])-1)
+
+
+(Q3)
+(3a)
+f(n)=g(n)+h(n)
+Yes.
+
+(3b) 
+f(n)=g(n)+3h(n)
+No, because 3*h(n) may not be admissible. 
+Cost of returned solution / cost of optimal solution = 3
+
+Note: this is often called Weighted A*.
+
+(3c)
+f(n)=3*g(n)+h(n)=3*(g(n)+h(n)/3)
+Yes. h(n) is admissible so h(n)/3 is also admissible.
+
+
+(Q4)
+
+(4a)
+I would recommend h1 when we have limited memory space, or the maze is large and without many walls so that there are a large number of states to be expanded. Since h1 dominates h2, h1 always expands less nodes than h2 so that h1 requires less memory space.
+
+(4b)
+I would recommend h2 when we want faster running time and/or the maze is relatively small and has many walls (barriers) so that there are not many nodes to be expanded. Although using h2, the algorithm will expand more nodes than using h1, shorter computing time for h2 may result in faster running time in total.
+
+</pre>
+</body>
+</html>
