@@ -137,7 +137,7 @@ code Main
 		  condition.Wait(&mutex)
 		endWhile
 		status[p] = EATING
-		print p
+		printInt p
 		self.PrintAllStatus()
 		mutex.Unlock()
       endMethod
