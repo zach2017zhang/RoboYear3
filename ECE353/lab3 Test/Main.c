@@ -96,9 +96,15 @@ code Main
         i: int
       for i = 1 to 7
         -- Now he is thinking
+		  printInt(p)
+		  print("wantss eating\n")
         mon.PickupForks (p)
+		printInt (p)
+		print ("is eating\n")
         -- Now he is eating
         mon.PutDownForks (p)
+		  printInt(p)
+		  print("ends eating\n")
       endFor
     endFunction
 
