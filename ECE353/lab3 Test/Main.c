@@ -168,7 +168,7 @@ code Main
         for p = 0 to 4
           switch status [p]
             case HUNGRY:
-              print ("    ")
+              print ("~   ")
               break
             case EATING:
               print ("E   ")
