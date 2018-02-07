@@ -132,6 +132,7 @@ code Main
       -- ...unimplemented...
 		mutex.Lock()
 		status[p] = HUNGRY
+		print ("firstprint\n")
 		self.PrintAllStatus()
 		while status[(p+4)%5]==EATING || status[(p+1)%5]==EATING
 		  condition.Wait(&mutex)
