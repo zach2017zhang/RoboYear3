@@ -132,7 +132,7 @@ code System
     --
       print (s)
       print (" = ")
-      printIntVar (p)
+      printInt (i)
       nl () 
     endFunction
 
