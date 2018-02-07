@@ -143,13 +143,17 @@ code Main
       endMethod
 
     method PutDownForks (p: int)
+		var
+			oldIntStat: int
       -- This method is called when the philosopher 'p' is done eating.
       -- ...unimplemented...
 		mutex.Lock()
 		status[p]=THINKING
 		self.PrintAllStatus()
 		print ("broadcast")
+		oldIntStat = SetInterruptsTo(DISABLED)
 		condition.Broadcast(&mutex)
+		oldIntStat = SetInterruptsTo(oldIntStat)
 		mutex.Unlock()
       endMethod
 
