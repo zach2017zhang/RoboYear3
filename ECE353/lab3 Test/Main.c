@@ -148,6 +148,7 @@ code Main
 		mutex.Lock()
 		status[p]=THINKING
 		self.PrintAllStatus()
+		print ("broadcast")
 		condition.Broadcast(&mutex)
 		mutex.Unlock()
       endMethod
