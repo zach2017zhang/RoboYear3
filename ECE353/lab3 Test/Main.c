@@ -132,12 +132,12 @@ code Main
       -- ...unimplemented...
 		mutex.Lock()
 		status[p] = HUNGRY
-		mon.PrintAllStatus()
+		self.PrintAllStatus()
 		while status[(p+4)%5]==EATING || status[(p+1)%5]==EATING
 		  condition.Wait(&mutex)
 		endWhile
 		status[p]=EATING
-		mon.PrintAllStatus()
+		self.PrintAllStatus()
 		mutex.Unlock()
       endMethod
 
@@ -146,7 +146,7 @@ code Main
       -- ...unimplemented...
 		mutex.Lock()
 		status[p]=THINKING
-		mon.PrintAllStatus()
+		self.PrintAllStatus()
 		condition.Broadcast(&mutex)
 		mutex.Unlock()
       endMethod
