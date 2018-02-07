@@ -97,14 +97,14 @@ code Main
       for i = 1 to 7
         -- Now he is thinking
 		  printInt(p)
-		  print("wantss eating\n")
+		  print(" wants eating\n")
         mon.PickupForks (p)
 		printInt (p)
-		print ("is eating\n")
+		print (" is eating\n")
         -- Now he is eating
         mon.PutDownForks (p)
 		  printInt(p)
-		  print("ends eating\n")
+		  print(" ends eating\n")
       endFor
     endFunction
 
@@ -138,12 +138,7 @@ code Main
       -- ...unimplemented...
 		mutex.Lock()
 		status[p] = HUNGRY
-		print ("firstprint\n")
-		printInt (status[0])
-		printInt (status[1])
-		printInt (status[2])
-		printInt (status[3])
-		printInt (status[4])
+		print ("Firstprint\n")
 		self.PrintAllStatus()
 		while status[(p+4)%5]==EATING || status[(p+1)%5]==EATING
 		  condition.Wait(&mutex)
@@ -160,9 +155,10 @@ code Main
 		mutex.Lock()
 		status[p]=THINKING
 		self.PrintAllStatus()
-		print ("broadcast")
+		print ("broadcast\n")
 		condition.Broadcast(&mutex)
-		print ("done broadcast")
+		print ("done broadcast\n")
+        self.PrintAllStatus()
 		mutex.Unlock()
       endMethod
 
