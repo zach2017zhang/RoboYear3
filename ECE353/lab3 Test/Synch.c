@@ -108,6 +108,8 @@ code Synch
            endIf
            oldIntStat = SetInterruptsTo (DISABLED)
            if !heldBy
+            print (currentThread.name)
+            print ("has got the lock")
              heldBy = currentThread
            else
              waitingThreads.AddToEnd (currentThread)
@@ -132,6 +134,8 @@ code Synch
            if t
              t.status = READY
              readyList.AddToEnd (t)
+                print("give lock to")
+                print(t.name)
              heldBy = t
            else
              heldBy = null
