@@ -414,6 +414,8 @@ print("D created\n")
      endFunction
 
   function PlayGame (game: int)
+  print (currentThread.name)
+  print("Requires\n")
       gpmon.Request(game)
       currentThread.Yield()
       gpmon.Return(game)
