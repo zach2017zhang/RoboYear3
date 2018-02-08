@@ -10,10 +10,10 @@ code Main
 -----------------------------  Main  ---------------------------------
 
   function main ()
-      InitializeScheduler ()
-      DiningPhilosophers ()
+      -- InitializeScheduler ()
+      -- DiningPhilosophers ()
 
-      -- FatalError ("Need to implement")
+      FatalError ("Need to implement")
     endFunction
 
 
@@ -96,24 +96,18 @@ code Main
         i: int
       for i = 1 to 7
         -- Now he is thinking
-		  printInt(p)
-		  print(" wants eating\n")
         mon.PickupForks (p)
-		printInt (p)
-		print (" is eating\n")
         -- Now he is eating
         mon.PutDownForks (p)
-		  printInt(p)
-		  print(" ends eating\n")
       endFor
     endFunction
 
   class ForkMonitor
     superclass Object
     fields
-		status: array [5] of int -- For each philosopher: HUNGRY, EATING, or THINKING
-		mutex: Mutex	
-		condition: Condition
+      status: array [5] of int -- For each philosopher: HUNGRY, EATING, or THINKING
+      mutex: Mutex
+      condition: array [5] of Condition
     methods
       Init ()
       PickupForks (p: int)
@@ -126,40 +120,41 @@ code Main
     method Init ()
       -- Initialize so that all philosophers are THINKING.
       -- ...unimplemented...
-	  mutex = new Mutex
-	  condition = new Condition
-	  mutex.Init()
-	  condition.Init()
-	  status = new array of int {5 of THINKING}
+      var i: int
+      status = new array of int { 5 of THINKING }
+      condition = new array [5] of Condition { 5 of new Condition }
+      for i = 0 to 4
+        condition[i].Init ()
+      endFor
+      mutex = new Mutex
+      mutex.Init ()
       endMethod
 
     method PickupForks (p: int)
       -- This method is called when philosopher 'p' wants to eat.
       -- ...unimplemented...
-		mutex.Lock()
-		status[p] = HUNGRY
-		print ("Firstprint\n")
-		self.PrintAllStatus()
-		while status[(p+4)%5]==EATING || status[(p+1)%5]==EATING
-		  condition.Wait(&mutex)
-		endWhile
-		status[p] = EATING
-		printIntVar ("status",p)
-		self.PrintAllStatus()
-		mutex.Unlock()
+      mutex.Lock()
+      status [p] = HUNGRY
+      self.PrintAllStatus ()
+      while status[(p+4)%5]==EATING || status[(p+1)%5]==EATING
+        condition[p].Wait(&mutex)
+      endWhile
+      status[p] = EATING
+      self.PrintAllStatus()
+      mutex.Unlock()
       endMethod
 
     method PutDownForks (p: int)
       -- This method is called when the philosopher 'p' is done eating.
       -- ...unimplemented...
-		mutex.Lock()
-		status[p]=THINKING
-		self.PrintAllStatus()
-		print ("broadcast\n")
-		condition.Broadcast(&mutex)
-		print ("done broadcast\n")
-        self.PrintAllStatus()
-		mutex.Unlock()
+      mutex.Lock()
+      status[p] = THINKING
+      self.PrintAllStatus()
+      if status[p+4)%5]==HUNGRY
+        condition[(p+4)%5].Signal(&mutex)
+      if status[p+1)%5]==HUNGRY
+        condition[(p+1)%5].Signal(&mutex)
+      mutex.Unlock()
       endMethod
 
     method PrintAllStatus ()
@@ -179,7 +174,7 @@ code Main
         for p = 0 to 4
           switch status [p]
             case HUNGRY:
-              print ("~   ")
+              print ("    ")
               break
             case EATING:
               print ("E   ")
