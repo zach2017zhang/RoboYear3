@@ -14,7 +14,10 @@ code Main
       -- DiningPhilosophers ()
       -- ThreadFinish()
       
-      SleepingBarber()
+      -- SleepingBarber()
+      -- ThreadFinish()
+      
+      DiningPhilosophers ()
       ThreadFinish()
       -- FatalError ("Need to implement")
     endFunction
@@ -276,7 +279,7 @@ code Main
 
      endFunction
 
-  function barber_fn (chair_num: int)
+  function barber_fn (not_used: int)
       while true
         customers_sem.Down()
         access_lock.Lock()
@@ -366,5 +369,131 @@ code Main
       print ("\n")
       oldStatus = SetInterruptsTo (oldStatus)
     endFunction
+
+-----------------------------  Gaming Parlor  ----------------------------
+  const
+    Backgammon = 4
+    Risk = 5
+    Monopoly = 2
+    Pictionary = 1
+  var
+    mon: GPMonitor
+    customer: array [5] of Thread = new array of Thread {5 of new Thread }
+
+  function DiningPhilosophers ()
+
+      mon = new GPMonitor
+      mon.Init ()
+      
+      dice = 8
+
+      customer[0].Init ("A")
+      customer[0].Fork (PlayGame, Backgammon)
+
+      customer[1].Init ("B")
+      customer[1].Fork (PlayGame, Backgammon)
+
+      customer[2].Init ("C")
+      customer[2].Fork (PlayGame, Risk)
+
+      customer[3].Init ("D")
+      customer[3].Fork (PlayGame, Risk)
+
+      customer[4].Init ("E")
+      customer[4].Fork (PlayGame, Monopoly)
+      
+      customer[5].Init ("F")
+      customer[5].Fork (PlayGame, Monopoly)
+
+      customer[6].Init ("G")
+      customer[6].Fork (PlayGame, Pictionary)
+
+      customer[7].Init ("H")
+      customer[7].Fork (PlayGame, Pictionary)
+
+     endFunction
+
+  function PlayGame (game: int)
+      Request(game)
+      currentThread.Yield()
+      Return(game)
+    endFunction
+
+  class GPMonitor
+    superclass Object
+    fields
+      dice: int
+      mutex: Mutex
+      condition: Condition
+    methods
+      Init ()
+      Request (numberOfDice: int)
+      Return (Return (numberOfDice: int))
+      ReturnPrint (num_dice: int)
+      RequestPrint (num_dice: int)
+      ProceedPrint (num_dice: int)
+      AvailableDice()
+  endClass
+
+  behavior ForkMonitor
+
+    method Init ()
+      dice = 8
+      condition = new of Condition
+      condition.Init ()
+      mutex = new Mutex
+      mutex.Init ()
+      endMethod
+
+    method Request (request_dice: int)
+      mutex.Lock()
+      RequestPrint(request_dice)
+      while dice < request_dice
+        condition.Wait(&mutex)
+      endWhile
+      dice = dice - request_dice
+      ProceedPrint (request_dice)
+      mutex.Unlock()
+      endMethod
+
+    method Return (return_dice: int)
+      mutex.Lock()
+      dice = dice+return_dice
+      ReturnPrint (return_dice)
+      condition.Broadcast(&mutex)
+      mutex.Unlock()
+      endMethod
+    
+    method ReturnPrint (num_dice: int)
+      print(currentThread.name)
+      print(" releases and adds back ")
+      printInt(n)
+      print ("\n")
+      self.AvailableDice()
+    endMethod
+    
+    method RequestPrint (num_dice: int)
+      print(currentThread.name)
+      print(" requests ")
+      printInt(n)
+      print ("\n")
+      self.AvailableDice()
+    endMethod
+    
+    method ProceedPrint (num_dice: int)
+      print(currentThread.name)
+      print(" proceeds with ")
+      printInt(n)
+      print ("\n")
+      self.AvailableDice()
+    endMethod
+    
+    method AvailableDice()
+      print("---------------Number of dice now avail = ")
+      printInt(dice)
+      print ("\n")
+    endMethod
+
+  endBehavior
 
 endCode
