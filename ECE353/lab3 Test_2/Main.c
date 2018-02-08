@@ -54,138 +54,132 @@ code Main
   -- state the problem is to forget about the forks altogether and stipulate 
   -- that a philosopher may only eat when his two neighbors are not eating.)
 
-  enum HUNGRY, EATING, THINKING
-  var
-    mon: ForkMonitor
-    philospher: array [5] of Thread = new array of Thread {5 of new Thread }
+enum HUNGRY, EATING, THINKING
+var
+mon: ForkMonitor
+philospher: array [5] of Thread = new array of Thread {5 of new Thread }
 
-  function DiningPhilosophers ()
+function DiningPhilosophers ()
 
-      print ("Plato\n")
-      print ("    Sartre\n")
-      print ("        Kant\n")
-      print ("            Nietzsche\n")
-      print ("                Aristotle\n")
+print ("Plato\n")
+print ("    Sartre\n")
+print ("        Kant\n")
+print ("            Nietzsche\n")
+print ("                Aristotle\n")
 
-      mon = new ForkMonitor
-      mon.Init ()
-      mon.PrintAllStatus ()
+mon = new ForkMonitor
+mon.Init ()
+mon.PrintAllStatus ()
 
-      philospher[0].Init ("Plato")
-      philospher[0].Fork (PhilosphizeAndEat, 0)
+philospher[0].Init ("Plato")
+philospher[0].Fork (PhilosphizeAndEat, 0)
 
-      philospher[1].Init ("Sartre")
-      philospher[1].Fork (PhilosphizeAndEat, 1)
+philospher[1].Init ("Sartre")
+philospher[1].Fork (PhilosphizeAndEat, 1)
 
-      philospher[2].Init ("Kant")
-      philospher[2].Fork (PhilosphizeAndEat, 2)
+philospher[2].Init ("Kant")
+philospher[2].Fork (PhilosphizeAndEat, 2)
 
-      philospher[3].Init ("Nietzsche")
-      philospher[3].Fork (PhilosphizeAndEat, 3)
+philospher[3].Init ("Nietzsche")
+philospher[3].Fork (PhilosphizeAndEat, 3)
 
-      philospher[4].Init ("Aristotle")
-      philospher[4].Fork (PhilosphizeAndEat, 4)
+philospher[4].Init ("Aristotle")
+philospher[4].Fork (PhilosphizeAndEat, 4)
 
-     endFunction
+endFunction
 
-  function PhilosphizeAndEat (p: int)
-    -- The parameter "p" identifies which philosopher this is.
-    -- In a loop, he will think, acquire his forks, eat, and
-    -- put down his forks.
-      var
-        i: int
-      for i = 1 to 7
-        -- Now he is thinking
-        mon.PickupForks (p)
-        -- Now he is eating
-        mon.PutDownForks (p)
-      endFor
-    endFunction
+function PhilosphizeAndEat (p: int)
+-- The parameter "p" identifies which philosopher this is.
+-- In a loop, he will think, acquire his forks, eat, and
+-- put down his forks.
+var
+i: int
+for i = 1 to 7
+-- Now he is thinking
+mon.PickupForks (p)
+-- Now he is eating
+mon.PutDownForks (p)
+endFor
+endFunction
 
-  class ForkMonitor
-    superclass Object
-    fields
-      status: array [5] of int -- For each philosopher: HUNGRY, EATING, or THINKING
-        mutex: Mutex
-        condition: Condition
-    methods
-      Init ()
-      PickupForks (p: int)
-      PutDownForks (p: int)
-      PrintAllStatus ()
-  endClass
+class ForkMonitor
+superclass Object
+fields
+-- Let 1 = HUNGRY, 2 = EATING, 3 = THINKING
+status: array [5] of int -- For each philosopher: HUNGRY, EATING, or THINKING
+mutex: Mutex
+condition: Condition
+methods
+Init ()
+PickupForks (p: int)
+PutDownForks (p: int)
+PrintAllStatus ()
+endClass
 
-  behavior ForkMonitor
+behavior ForkMonitor
 
-    method Init ()
-      -- Initialize so that all philosophers are THINKING.
-      -- ...unimplemented...
-        mutex = new Mutex
-        condition = new Condition
-        mutex.Init()
-        condition.Init()
-        status = new array of int {5 of 3}
-      endMethod
+method Init ()
+mutex = new Mutex
+condition = new Condition
+mutex.Init()
+condition.Init()
+status = new array of int {5 of 3}
+endMethod
 
-    method PickupForks (p: int)
-      -- This method is called when philosopher 'p' wants to eat.
-      -- ...unimplemented...
-        var
-            left: int
-            right: int
-        mutex.Lock()
-        status[p] = HUNGRY
-        mon.PrintAllStatus()
-        left = (p+4)%5
-        right = (p+1)%5
-        while status[left]==EATING || status[right]==EATING
-            condition.Wait(&mutex)
-        endWhile
-        status[p] = EATING
-        mon.PrintAllStatus()
-        mutex.Unlock()
-      endMethod
+method PickupForks (p: int)
+var
+left: int
+right: int
+mutex.Lock()
+status[p] = HUNGRY
+mon.PrintAllStatus()
+left = (p+4)%5
+right = (p+1)%5
+while status[left]==EATING || status[right]==EATING
+condition.Wait(&mutex)
+endWhile
+status[p] = EATING
+mon.PrintAllStatus()
+mutex.Unlock()
+endMethod
 
-    method PutDownForks (p: int)
-      -- This method is called when the philosopher 'p' is done eating.
-      -- ...unimplemented...
-        mutex.Lock()
-        status[p] = THINKING
-        mon.PrintAllStatus()
-        condition.Broadcast(&mutex)
-        mutex.Unlock()
-      endMethod
+method PutDownForks (p: int)
+mutex.Lock()
+status[p] = THINKING
+mon.PrintAllStatus()
+-- Alternatively, use an array of 5 conditions to only wake up neighbors if the other fork is also available
+condition.Broadcast(&mutex)
+mutex.Unlock()
+endMethod
 
-    method PrintAllStatus ()
-      -- Print a single line showing the status of all philosophers.
-      --      '.' means thinking
-      --      ' ' means hungry
-      --      'E' means eating
-      -- Note that this method is internal to the monitor.  Thus, when
-      -- it is called, the monitor lock will already have been acquired
-      -- by the thread.  Therefore, this method can never be re-entered,
-      -- since only one thread at a time may execute within the monitor.
-      -- Consequently, printing is safe.  This method calls the "print"
-      -- routine several times to print a single line, but these will all
-      -- happen without interuption.
-        var
-          p: int
-        for p = 0 to 4
-          switch status [p]
-            case HUNGRY:
-              print ("    ")
-              break
-            case EATING:
-              print ("E   ")
-              break
-            case THINKING:
-              print (".   ")
-              break
-          endSwitch
-        endFor
-        nl ()
-      endMethod
+method PrintAllStatus ()
+-- Print a single line showing the status of all philosophers.
+--      '.' means thinking
+--      ' ' means hungry
+--      'E' means eating
+-- Note that this method is internal to the monitor.  Thus, when
+-- it is called, the monitor lock will already have been acquired
+-- by the thread.  Therefore, this method can never be re-entered,
+-- since only one thread at a time may execute within the monitor.
+-- Consequently, printing is safe.  This method calls the "print"
+-- routine several times to print a single line, but these will all
+-- happen without interuption.
+var
+p: int
+for p = 0 to 4
+switch status [p]
+case HUNGRY:
+print ("    ")
+break
+case EATING:
+print ("E   ")
+break
+case THINKING:
+print (".   ")
+break
+endSwitch
+endFor
+nl ()
+endMethod
 
-  endBehavior
-
-endCode
+endBehavior
