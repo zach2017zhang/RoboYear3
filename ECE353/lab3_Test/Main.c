@@ -391,11 +391,9 @@ code Main
       customer[1].Init ("B")
       customer[1].Fork (PlayGame, Backgammon)
 
-print("C created\n")
       customer[2].Init ("C")
       customer[2].Fork (PlayGame, Risk)
 
-print("D created\n")
       customer[3].Init ("D")
       customer[3].Fork (PlayGame, Risk)
 
@@ -414,8 +412,6 @@ print("D created\n")
      endFunction
 
   function PlayGame (game: int)
-  print (currentThread.name)
-  print("Requires\n")
       gpmon.Request(game)
       currentThread.Yield()
       gpmon.Return(game)
