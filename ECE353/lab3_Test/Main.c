@@ -315,7 +315,7 @@ code Main
       var
         oldStatus: int
       oldStatus = SetInterruptsTo (DISABLED)
-      print ("Barber start!")
+      print ("Barber start!\n")
       oldStatus = SetInterruptsTo (oldStatus)
     endFunction
   
@@ -323,18 +323,32 @@ code Main
       var
         oldStatus: int
       oldStatus = SetInterruptsTo (DISABLED)
-      print ("Barber End!")
+      print ("Barber End!\n")
       oldStatus = SetInterruptsTo (oldStatus)
     endFunction
     
-  function PrintCustomerState(customer_num: int, customer_state: ptr to array of char)
+  function PrintCustomerState(custn: int, custs: ptr to array of char)
       var
         oldStatus: int
+        i: int
       oldStatus = SetInterruptsTo (DISABLED)
-      printInt (customer_num)
-      print (" is ")
-      print (customer_state)
-      print ("\n")
+      for i = 1 to 5
+        if i <= waiting
+          print ("X")
+        else
+          print ("-")
+        endIf
+      endFor
+      print ("          ")
+      for i = 0 to CUSTOMER_NUM-1
+        if i == custn
+          print (custs)
+          print ("    ")
+        else
+          print (" ")
+          print ("    ")
+        endIf
+      endFor
       oldStatus = SetInterruptsTo (oldStatus)
     endFunction
 
