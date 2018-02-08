@@ -150,9 +150,9 @@ code Main
       mutex.Lock()
       status[p] = THINKING
       self.PrintAllStatus()
-      if status[p+4)%5]==HUNGRY
+      if status[(p+4)%5]==HUNGRY
         condition[(p+4)%5].Signal(&mutex)
-      if status[p+1)%5]==HUNGRY
+      if status[(p+1)%5]==HUNGRY
         condition[(p+1)%5].Signal(&mutex)
       mutex.Unlock()
       endMethod
