@@ -425,8 +425,8 @@ print("D created\n")
     superclass Object
     fields
       dice: int
-      mutex: Mutex
-      condition: Condition
+      frontdesk: Mutex
+      gameAvailable: Condition
     methods
       Init ()
       Request (request_dice: int)
@@ -441,29 +441,29 @@ print("D created\n")
 
     method Init ()
       dice = 8
-      condition = new Condition
-      condition.Init ()
-      mutex = new Mutex
-      mutex.Init ()
+      gameAvailable = new Condition
+      gameAvailable.Init ()
+      frontdesk = new Mutex
+      frontdesk.Init ()
       endMethod
 
     method Request (request_dice: int)
-      mutex.Lock()
+      frontdesk.Lock()
       self.RequestPrint(request_dice)
       while dice < request_dice
-        condition.Wait(&mutex)
+        gameAvailable.Wait(&frontdesk)
       endWhile
       dice = dice - request_dice
       self.ProceedPrint (request_dice)
-      mutex.Unlock()
+      frontdesk.Unlock()
       endMethod
 
     method Return (return_dice: int)
-      mutex.Lock()
+      frontdesk.Lock()
       dice = dice+return_dice
       self.ReturnPrint (return_dice)
-      condition.Broadcast(&mutex)
-      mutex.Unlock()
+      gameAvailable.Broadcast(&frontdesk)
+      frontdesk.Unlock()
       endMethod
     
     method ReturnPrint (num_dice: int)
