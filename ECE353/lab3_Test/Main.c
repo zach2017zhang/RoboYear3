@@ -450,7 +450,7 @@ print("D created\n")
     method Request (request_dice: int)
       frontdesk.Lock()
       self.RequestPrint(request_dice)
-      while dice < request_dice
+      while request_dice > dice 
         gameAvailable.Wait(&frontdesk)
       endWhile
       dice = dice - request_dice
