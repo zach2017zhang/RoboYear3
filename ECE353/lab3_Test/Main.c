@@ -17,7 +17,7 @@ code Main
       -- SleepingBarber()
       -- ThreadFinish()
       
-      DiningPhilosophers ()
+      GamingParlor()
       ThreadFinish()
       -- FatalError ("Need to implement")
     endFunction
@@ -380,7 +380,7 @@ code Main
     gpmon: GPMonitor
     customer: array [5] of Thread = new array of Thread {5 of new Thread }
 
-  function DiningPhilosophers ()
+  function GamingParlor ()
 
       gpmon = new GPMonitor
       gpmon.Init ()
