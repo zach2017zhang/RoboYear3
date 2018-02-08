@@ -206,6 +206,7 @@ code Main
     waiting: int
     access_lock: Mutex
     customers_sem : Semaphore
+    customers_done_sem : Semaphore
     barber_sem: Semaphore
     barber_done_sem: Semaphore
 
@@ -215,6 +216,9 @@ code Main
       
       customers_sem = new Semaphore
       customers_sem.Init(0)
+      
+      customers_done_sem = new Semaphore
+      customers_done_sem.Init(0)
       
       barber_sem = new Semaphore
       barber_sem.Init(0)
@@ -283,6 +287,7 @@ code Main
         PrintBarberStart()
         barber_sem.Up()
         currentThread.Yield() -- cut_hair()
+        customers_done_sem.Down()
         PrintBarberEnd()
         barber_done_sem.Up()
       endWhile
@@ -303,6 +308,7 @@ code Main
           PrintCustomerState(charToInt(currentThread.name[0]) - charToInt('0'), "B")
           currentThread.Yield() -- get_haircut()
           PrintCustomerState(charToInt(currentThread.name[0]) - charToInt('0'), "F")
+          customers_done_sem.Up()
           barber_done_sem.Down()
         else
           access_lock.Unlock()
