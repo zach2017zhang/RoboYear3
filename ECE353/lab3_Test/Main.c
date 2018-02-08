@@ -445,19 +445,19 @@ code Main
 
     method Request (request_dice: int)
       mutex.Lock()
-      RequestPrint(request_dice)
+      self.RequestPrint(request_dice)
       while dice < request_dice
         condition.Wait(&mutex)
       endWhile
       dice = dice - request_dice
-      ProceedPrint (request_dice)
+      self.ProceedPrint (request_dice)
       mutex.Unlock()
       endMethod
 
     method Return (return_dice: int)
       mutex.Lock()
       dice = dice+return_dice
-      ReturnPrint (return_dice)
+      self.ReturnPrint (return_dice)
       condition.Broadcast(&mutex)
       mutex.Unlock()
       endMethod
