@@ -2,7 +2,7 @@ code Main
 
   -- OS Class: Project 3
   --
-  -- <PUT YOUR NAME HERE>
+  -- <Yuchen Wu>
   --
 
   -- This package contains the following:
@@ -11,13 +11,9 @@ code Main
 
   function main ()
       InitializeScheduler ()
-      -- DiningPhilosophers ()
-      -- ThreadFinish()
-      
+      DiningPhilosophers ()
       -- SleepingBarber()
-      -- ThreadFinish()
-      
-      GamingParlor()
+      -- GamingParlor()
       ThreadFinish()
       -- FatalError ("Need to implement")
     endFunction
@@ -237,43 +233,33 @@ code Main
       barber.Init("Barber")
       barber.Fork (barber_fn, 0)
       
-      --print ("Customer 0 creating!\n")
       customers[0].Init ("0")
       customers[0].Fork (customer_fn, 2)
       
-      --print ("Customer 1 creating!\n")
       customers[1].Init ("1")
       customers[1].Fork (customer_fn, 2)
       
-      --print ("Customer 2 creating!\n")
       customers[2].Init ("2")
       customers[2].Fork (customer_fn, 2)
       
-      --print ("Customer 3 creating!\n")
       customers[3].Init ("3")
       customers[3].Fork (customer_fn, 2)
       
-      --print ("Customer 4 creating!\n")
       customers[4].Init ("4")
       customers[4].Fork (customer_fn, 2)
       
-      --print ("Customer 5 creating!\n")
       customers[5].Init ("5")
       customers[5].Fork (customer_fn, 2)
       
-      --print ("Customer 6 creating!\n")
       customers[6].Init ("6")
       customers[6].Fork (customer_fn, 2)
       
-      --print ("Customer 7 creating!\n")
       customers[7].Init ("7")
       customers[7].Fork (customer_fn, 2)
       
-      --print ("Customer 8 creating!\n")
       customers[8].Init ("8")
       customers[8].Fork (customer_fn, 2)
       
-      --print ("Customer 9 creating!\n")
       customers[9].Init ("9")
       customers[9].Fork (customer_fn, 2)
 
