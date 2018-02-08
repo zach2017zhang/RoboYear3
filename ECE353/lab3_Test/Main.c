@@ -465,7 +465,7 @@ code Main
     method ReturnPrint (num_dice: int)
       print(currentThread.name)
       print(" releases and adds back ")
-      printInt(n)
+      printInt(num_dice)
       print ("\n")
       self.AvailableDice()
     endMethod
@@ -473,7 +473,7 @@ code Main
     method RequestPrint (num_dice: int)
       print(currentThread.name)
       print(" requests ")
-      printInt(n)
+      printInt(num_dice)
       print ("\n")
       self.AvailableDice()
     endMethod
@@ -481,7 +481,7 @@ code Main
     method ProceedPrint (num_dice: int)
       print(currentThread.name)
       print(" proceeds with ")
-      printInt(n)
+      printInt(num_dice)
       print ("\n")
       self.AvailableDice()
     endMethod
