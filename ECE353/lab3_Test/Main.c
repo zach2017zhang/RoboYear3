@@ -349,6 +349,7 @@ code Main
           print ("    ")
         endIf
       endFor
+      print ("\n")
       oldStatus = SetInterruptsTo (oldStatus)
     endFunction
 
