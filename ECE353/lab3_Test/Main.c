@@ -428,7 +428,7 @@ code Main
     methods
       Init ()
       Request (numberOfDice: int)
-      Return (Return (numberOfDice: int))
+      Return (numberOfDice: int)
       ReturnPrint (num_dice: int)
       RequestPrint (num_dice: int)
       ProceedPrint (num_dice: int)
@@ -439,7 +439,7 @@ code Main
 
     method Init ()
       dice = 8
-      condition = new of Condition
+      condition = new Condition
       condition.Init ()
       mutex = new Mutex
       mutex.Init ()
