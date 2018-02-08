@@ -377,7 +377,7 @@ code Main
     Monopoly = 2
     Pictionary = 1
   var
-    mon: GPMonitor
+    gpmon: GPMonitor
     customer: array [5] of Thread = new array of Thread {5 of new Thread }
 
   function DiningPhilosophers ()
