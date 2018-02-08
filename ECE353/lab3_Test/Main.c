@@ -398,9 +398,13 @@ code Main
      endFunction
 
   function PlayGame (game: int)
-      gpmon.Request(game)
-      currentThread.Yield()
-      gpmon.Return(game)
+      var
+	i: int
+      for i = 1 to 5
+        gpmon.Request(game)
+        currentThread.Yield()
+        gpmon.Return(game)
+      endFor
     endFunction
 
   class GPMonitor
