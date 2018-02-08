@@ -382,8 +382,8 @@ code Main
 
   function DiningPhilosophers ()
 
-      mon = new GPMonitor
-      mon.Init ()
+      gpmon = new GPMonitor
+      gpmon.Init ()
       
       dice = 8
 
@@ -414,9 +414,9 @@ code Main
      endFunction
 
   function PlayGame (game: int)
-      Request(game)
+      gpmon.Request(game)
       currentThread.Yield()
-      Return(game)
+      gpmon.Return(game)
     endFunction
 
   class GPMonitor
