@@ -229,9 +229,7 @@ code Main
       access_lock = new Mutex
       access_lock.Init()
       
-      print ("Start running\n")
-      
-      print ("Barber creating!\n")
+      PrintHead()
       barber = new Thread
       barber.Init("Barber")
       barber.Fork (barber_fn, 0)
@@ -317,11 +315,20 @@ code Main
       endFor
     endFunction
   
+  function PrintHead ()
+    var i: int
+    print("        Barber")
+    for i = i to CUSTOMER_NUM
+      print("  ")
+      printInt (i)
+    endFor
+  endFunction
+  
   function PrintBarberStart ()
       var
         oldStatus: int
       oldStatus = SetInterruptsTo (DISABLED)
-      print ("         Barber start!\n")
+      print ("         start\n")
       oldStatus = SetInterruptsTo (oldStatus)
     endFunction
   
@@ -329,7 +336,7 @@ code Main
       var
         oldStatus: int
       oldStatus = SetInterruptsTo (DISABLED)
-      print ("         Barber End!\n")
+      print ("         end\n")
       oldStatus = SetInterruptsTo (oldStatus)
     endFunction
     
@@ -349,10 +356,10 @@ code Main
       for i = 0 to CUSTOMER_NUM-1
         if i == custn
           print (custs)
-          print ("    ")
+          print ("  ")
         else
           print (" ")
-          print ("    ")
+          print ("  ")
         endIf
       endFor
       print ("\n")
