@@ -384,8 +384,6 @@ code Main
 
       gpmon = new GPMonitor
       gpmon.Init ()
-      
-      dice = 8
 
       customer[0].Init ("A")
       customer[0].Fork (PlayGame, Backgammon)
