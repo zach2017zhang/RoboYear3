@@ -10,10 +10,10 @@ code Main
 -----------------------------  Main  ---------------------------------
 
   function main ()
-      -- InitializeScheduler ()
-      -- DiningPhilosophers ()
+      InitializeScheduler ()
+      DiningPhilosophers ()
 
-      FatalError ("Need to implement")
+      -- FatalError ("Need to implement")
     endFunction
 
 
