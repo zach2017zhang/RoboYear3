@@ -113,6 +113,7 @@ startEating: array [5] of Condition
       PickupForks (p: int)
       PutDownForks (p: int)
       PrintAllStatus ()
+      CheckAboutEating (p: int)
   endClass
 
   behavior ForkMonitor
