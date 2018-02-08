@@ -108,13 +108,9 @@ code Synch
            endIf
            oldIntStat = SetInterruptsTo (DISABLED)
            if !heldBy
-            print (currentThread.name)
-            print ("has got the lock\n")
              heldBy = currentThread
            else
              waitingThreads.AddToEnd (currentThread)
-              print ("cant get lock go to sleep\n")
-             PrintReadyList ()
              currentThread.Sleep ()
            endIf
            oldIntStat = SetInterruptsTo (oldIntStat)
@@ -130,19 +126,13 @@ code Synch
              FatalError ("Attempt to unlock a mutex by a thread not holding it")
            endIf
            oldIntStat = SetInterruptsTo (DISABLED)
-          print(currentThread.name)
-            print("has thrown the lock\n")
            t = waitingThreads.Remove ()
            if t
              t.status = READY
              readyList.AddToEnd (t)
-                print("give lock to")
-                print(t.name)
-                print("\n")
              heldBy = t
            else
              heldBy = null
-             print ("no one gets the lock\n")
            endIf
            oldIntStat = SetInterruptsTo (oldIntStat)
          endMethod
