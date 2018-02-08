@@ -211,12 +211,16 @@ code Main
   function SleepingBarber ()
 
       waiting = 0
+      
       customers_sem = new Semaphore
       customers_sem.Init(0)
+      
       barber_sem = new Semaphore
       barber_sem.Init(0)
+      
       barber_done_sem = new Semaphore
       barber_done_sem.Init(0)
+      
       access_lock = new Mutex
       access_lock.Init()
       
@@ -224,6 +228,7 @@ code Main
       
       print ("Barber creating!\n")
       barber.Init("Barber")
+      print ("Barber creating!\n")
       barber.Fork (barber_fn, 0)
       
       print ("Customer 0 creating!\n")
@@ -284,7 +289,7 @@ code Main
     
   function customer_fn (cut_num:int)
       var
-        i:int
+        i: int
       for i = 1 to cut_num
         access_lock.Lock()
         PrintCustomerState(charToInt(currentThread.name[0]) - charToInt('0'), "E")
