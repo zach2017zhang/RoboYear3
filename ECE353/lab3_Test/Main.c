@@ -331,8 +331,8 @@ code Main
       var
         oldStatus: int
       oldStatus = SetInterruptsTo (DISABLED)
-      print ("customer_num")
-      print ("is")
+      print (customer_num)
+      print (" is ")
       print (customer_state)
       print ("\n")
       oldStatus = SetInterruptsTo (oldStatus)
