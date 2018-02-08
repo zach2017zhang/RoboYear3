@@ -378,7 +378,7 @@ code Main
     Pictionary = 1
   var
     gpmon: GPMonitor
-    customer: array [5] of Thread = new array of Thread {5 of new Thread }
+    customer: array [8] of Thread = new array of Thread {8 of new Thread }
 
   function GamingParlor ()
 
@@ -425,8 +425,8 @@ print("D created\n")
     superclass Object
     fields
       dice: int
-      frontdesk: Mutex
-      gameAvailable: Condition
+      mutex: Mutex
+      condition: Condition
     methods
       Init ()
       Request (request_dice: int)
@@ -441,29 +441,29 @@ print("D created\n")
 
     method Init ()
       dice = 8
-      gameAvailable = new Condition
-      gameAvailable.Init ()
-      frontdesk = new Mutex
-      frontdesk.Init ()
+      condition = new Condition
+      condition.Init ()
+      mutex = new Mutex
+      mutex.Init ()
       endMethod
 
     method Request (request_dice: int)
-      frontdesk.Lock()
+      mutex.Lock()
       self.RequestPrint(request_dice)
       while request_dice > dice 
-        gameAvailable.Wait(&frontdesk)
+        condition.Wait(&mutex)
       endWhile
       dice = dice - request_dice
       self.ProceedPrint (request_dice)
-      frontdesk.Unlock()
+      mutex.Unlock()
       endMethod
 
     method Return (return_dice: int)
-      frontdesk.Lock()
+      mutex.Lock()
       dice = dice+return_dice
       self.ReturnPrint (return_dice)
-      gameAvailable.Broadcast(&frontdesk)
-      frontdesk.Unlock()
+      condition.Broadcast(&mutex)
+      mutex.Unlock()
       endMethod
     
     method ReturnPrint (num_dice: int)
