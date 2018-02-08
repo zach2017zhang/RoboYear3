@@ -200,7 +200,7 @@ code Main
     CHAIRS = 5
     CUSTOMER_NUM = 10
   var
-    customers: array [10] of Thread = new array of Thread {5 of new Thread }
+    customers: array [10] of Thread = new array of Thread {10 of new Thread }
     barber: Thread
     waiting: int
     access_lock: Mutex
