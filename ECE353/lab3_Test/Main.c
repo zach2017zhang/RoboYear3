@@ -11,8 +11,8 @@ code Main
 
   function main ()
       InitializeScheduler ()
-      DiningPhilosophers ()
-      -- SleepingBarber()
+      -- DiningPhilosophers ()
+      SleepingBarber()
       -- GamingParlor()
       ThreadFinish()
       -- FatalError ("Need to implement")
