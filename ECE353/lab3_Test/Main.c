@@ -199,6 +199,7 @@ code Main
   const
     CHAIRS = 5
     CUSTOMER_NUM = 10
+    
   var
     customers: array [10] of Thread = new array of Thread {10 of new Thread }
     barber: Thread
@@ -227,8 +228,8 @@ code Main
       print ("Start running\n")
       
       print ("Barber creating!\n")
+      barber = new Thread
       barber.Init("Barber")
-      print ("Barber creating!\n")
       barber.Fork (barber_fn, 0)
       
       print ("Customer 0 creating!\n")
