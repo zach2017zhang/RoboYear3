@@ -232,43 +232,43 @@ code Main
       barber.Init("Barber")
       barber.Fork (barber_fn, 0)
       
-      print ("Customer 0 creating!\n")
+      --print ("Customer 0 creating!\n")
       customers[0].Init ("0")
       customers[0].Fork (customer_fn, 2)
       
-      print ("Customer 1 creating!\n")
+      --print ("Customer 1 creating!\n")
       customers[1].Init ("1")
       customers[1].Fork (customer_fn, 2)
       
-      print ("Customer 2 creating!\n")
+      --print ("Customer 2 creating!\n")
       customers[2].Init ("2")
       customers[2].Fork (customer_fn, 2)
       
-      print ("Customer 3 creating!\n")
+      --print ("Customer 3 creating!\n")
       customers[3].Init ("3")
       customers[3].Fork (customer_fn, 2)
       
-      print ("Customer 4 creating!\n")
+      --print ("Customer 4 creating!\n")
       customers[4].Init ("4")
       customers[4].Fork (customer_fn, 2)
       
-      print ("Customer 5 creating!\n")
+      --print ("Customer 5 creating!\n")
       customers[5].Init ("5")
       customers[5].Fork (customer_fn, 2)
       
-      print ("Customer 6 creating!\n")
+      --print ("Customer 6 creating!\n")
       customers[6].Init ("6")
       customers[6].Fork (customer_fn, 2)
       
-      print ("Customer 7 creating!\n")
+      --print ("Customer 7 creating!\n")
       customers[7].Init ("7")
       customers[7].Fork (customer_fn, 2)
       
-      print ("Customer 8 creating!\n")
+      --print ("Customer 8 creating!\n")
       customers[8].Init ("8")
       customers[8].Fork (customer_fn, 2)
       
-      print ("Customer 9 creating!\n")
+      --print ("Customer 9 creating!\n")
       customers[9].Init ("9")
       customers[9].Fork (customer_fn, 2)
 
@@ -315,7 +315,7 @@ code Main
       var
         oldStatus: int
       oldStatus = SetInterruptsTo (DISABLED)
-      print ("Barber start!\n")
+      print ("         Barber start!\n")
       oldStatus = SetInterruptsTo (oldStatus)
     endFunction
   
@@ -323,7 +323,7 @@ code Main
       var
         oldStatus: int
       oldStatus = SetInterruptsTo (DISABLED)
-      print ("Barber End!\n")
+      print ("         Barber End!\n")
       oldStatus = SetInterruptsTo (oldStatus)
     endFunction
     
@@ -332,14 +332,14 @@ code Main
         oldStatus: int
         i: int
       oldStatus = SetInterruptsTo (DISABLED)
-      for i = 1 to 5
+      for i = 1 to CHAIRS+1
         if i <= waiting
           print ("X")
         else
           print ("-")
         endIf
       endFor
-      print ("          ")
+      print ("                  ")
       for i = 0 to CUSTOMER_NUM-1
         if i == custn
           print (custs)
