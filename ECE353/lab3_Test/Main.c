@@ -425,8 +425,8 @@ code Main
       condition: Condition
     methods
       Init ()
-      Request (numberOfDice: int)
-      Return (numberOfDice: int)
+      Request (request_dice: int)
+      Return (return_dice: int)
       ReturnPrint (num_dice: int)
       RequestPrint (num_dice: int)
       ProceedPrint (num_dice: int)
