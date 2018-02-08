@@ -105,9 +105,10 @@ code Main
   class ForkMonitor
     superclass Object
     fields
-      status: array [5] of int -- For each philosopher: HUNGRY, EATING, or THINKING
-      mutex: Mutex
-      condition: array [5] of Condition
+monitorLock: Mutex -- The monitor lock
+status: array [5] of int 
+startEating: array [5] of Condition -- Signaled when eating can begin
+methods
     methods
       Init ()
       PickupForks (p: int)
@@ -120,44 +121,56 @@ code Main
     method Init ()
       -- Initialize so that all philosophers are THINKING.
       -- ...unimplemented...
-      var i: int
-      status = new array of int { 5 of THINKING }
-      condition = new array [5] of Condition { 5 of new Condition }
-      for i = 0 to 4
-        condition[i].Init ()
-      endFor
-      mutex = new Mutex
-      mutex.Init ()
+var i: int
+status = new array of int { 5 of THINKING }
+startEating = new array [5] of Condition { 5 of new Condition }
+for i = 0 to 4
+startEating[i].Init ()
+endFor
+monitorLock = new Mutex
+monitorLock.Init ()
       endMethod
 
     method PickupForks (p: int)
       -- This method is called when philosopher 'p' wants to eat.
       -- ...unimplemented...
-      mutex.Lock()
-      status [p] = HUNGRY
-      self.PrintAllStatus ()
-      while status[(p+4)%5]==EATING || status[(p+1)%5]==EATING
-        condition[p].Wait(&mutex)
-      endWhile
-      status[p] = EATING
-      self.PrintAllStatus()
-      mutex.Unlock()
+monitorLock.Lock ()
+status [p] = HUNGRY
+self.PrintAllStatus ()
+self.CheckAboutEating (p)
+if status [p] != EATING
+startEating [p].Wait (& monitorLock)
+endIf
+monitorLock.Unlock ()
       endMethod
 
     method PutDownForks (p: int)
       -- This method is called when the philosopher 'p' is done eating.
       -- ...unimplemented...
-      mutex.Lock()
-      status[p] = THINKING
-      self.PrintAllStatus()
-      if status[(p+4)%5]==HUNGRY
-        condition[(p+4)%5].Signal(&mutex)
-      endIf
-      if status[(p+1)%5]==HUNGRY
-        condition[(p+1)%5].Signal(&mutex)
-      endIf
-      mutex.Unlock()
+monitorLock.Lock ()
+status [p] = THINKING
+self.PrintAllStatus ()
+self.CheckAboutEating ((p+1) % 5)
+self.CheckAboutEating ((p-1) % 5)
+monitorLock.Unlock ()
       endMethod
+
+method CheckAboutEating (p: int)
+--
+-- See if the p-th philosopher should begin eating. He should begin
+-- if he is HUNGRY and if his left and right neighbors are not eating.
+-- If so, change his status to EATING. Also, it could be that this
+-- philosopher's thread was waiting; signal that thread so he can
+-- resume execution.
+--
+if status [p] == HUNGRY &&
+status [(p+1) % 5] != EATING &&
+status [(p-1) % 5] != EATING
+status [p] = EATING
+self.PrintAllStatus ()
+startEating [p].Signal (& monitorLock)
+endIf
+endMethod
 
     method PrintAllStatus ()
       -- Print a single line showing the status of all philosophers.
