@@ -190,5 +190,147 @@ code Main
       endMethod
 
   endBehavior
+  
+-----------------------------  Sleeping Barber  ----------------------------
+
+  const
+    CHAIRS = 5
+    CUSTOMER_NUM = 10
+  var
+    customers: array [5] of Thread = new array of Thread {5 of new Thread }
+    barber: Thread
+    waiting: int
+    access_lock: Mutex
+    customers_sem : Semaphore
+    barber_sem: Semaphore
+    barber_done_sem: Semaphore
+
+  function SleepingBarber ()
+
+      waiting = 0
+      customers_sem = new Semaphore
+      customers_sem.Init()
+      barber_sem = new Semaphore
+      barber_sem.Init()
+      barber_done_sem = new Semaphore
+      barber_done_sem.Init()
+      access_lock = new Mutex
+      access_lock.Init()
+      
+      print ("Start running\n")
+      
+      print ("Barber creating!\n")
+      barber.Init("Barber")
+      customers[0].Fork (barber_fn, 0)
+      
+      print ("Customer 0 creating!\n")
+      customers[0].Init ("0")
+      customers[0].Fork (customer_fn, 2)
+      
+      print ("Customer 1 creating!\n")
+      customers[1].Init ("1")
+      customers[1].Fork (customer_fn, 2)
+      
+      print ("Customer 2 creating!\n")
+      customers[2].Init ("2")
+      customers[2].Fork (customer_fn, 2)
+      
+      print ("Customer 3 creating!\n")
+      customers[3].Init ("3")
+      customers[3].Fork (customer_fn, 2)
+      
+      print ("Customer 4 creating!\n")
+      customers[4].Init ("4")
+      customers[4].Fork (customer_fn, 2)
+      
+      print ("Customer 5 creating!\n")
+      customers[5].Init ("5")
+      customers[5].Fork (customer_fn, 2)
+      
+      print ("Customer 6 creating!\n")
+      customers[6].Init ("6")
+      customers[6].Fork (customer_fn, 2)
+      
+      print ("Customer 7 creating!\n")
+      customers[7].Init ("7")
+      customers[7].Fork (customer_fn, 2)
+      
+      print ("Customer 8 creating!\n")
+      customers[8].Init ("8")
+      customers[8].Fork (customer_fn, 2)
+      
+      print ("Customer 9 creating!\n")
+      customers[9].Init ("9")
+      customers[9].Fork (customer_fn, 2)
+      
+      print ("Customer 10 creating!\n")
+      customers[10].Init ("10")
+      customers[10].Fork (customer_fn, 2)
+
+     endFunction
+
+  function barber_fn (chair_num: int)
+      while true
+        customers_sem.Down()
+        access_lock.Lock()
+        waiting = waiting -1
+        access_lock.Unlock()
+        PrintBarberStart()
+        barber_sem.Up()
+        currentThread.Yield() -- cut_hair()
+        PrintBarberEnd()
+        barber_done_sem.Up()
+      endWhile
+    endFunction
+    
+  function customer_fn (cut_num:int)
+      var
+        i:int
+      for i = 1 to cut_num
+        access_lock.Lock()
+        PrintCustomerState(charToInt(currentThread.name[0]) - charToInt('0'), "E")
+        if waiting < CHAIRS
+          waiting = waiting +1
+          PrintCustomerState(charToInt(currentThread.name[0]) - charToInt('0'), "S")
+          access_lock.Unlock()
+          customers_sem.Up()
+          barber_sem.Down()
+          PrintCustomerState(charToInt(currentThread.name[0]) - charToInt('0'), "B")
+          currentThread.Yield() -- get_haircut()
+          PrintCustomerState(charToInt(currentThread.name[0]) - charToInt('0'), "F")
+          barber_done_sem.Down()
+        else
+          access_lock.Unlock()
+        endIf
+        PrintCustomerState(charToInt(currentThread.name[0]) - charToInt('0'), "L")
+      endFor
+    endFunction
+  
+  function PrintBarberStart ()
+      var
+        oldStatus: int
+      oldStatus = SetInterruptsTo (DISABLED)
+      print ("Barber start!")
+      oldStatus = SetInterruptsTo (oldStatus)
+    endFunction
+  
+  function PrintBarberEnd ()
+      var
+        oldStatus: int
+      oldStatus = SetInterruptsTo (DISABLED)
+      print ("Barber End!")
+      oldStatus = SetInterruptsTo (oldStatus)
+    endFunction
+    
+  Function PrintCustomerState(customer_num: int, customer_state: ptr to array of char)
+      var
+        oldStatus: int
+      oldStatus = SetInterruptsTo (DISABLED)
+      print ("customer_num")
+      print ("is")
+      print (customer_state)
+      print ("\n")
+      oldStatus = SetInterruptsTo (oldStatus)
+    endFunction
 
 endCode
