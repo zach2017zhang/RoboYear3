@@ -13,7 +13,7 @@ code Main
       InitializeScheduler ()
       DiningPhilosophers ()
 
-      FatalError ("Need to implement")
+      --FatalError ("Need to implement")
     endFunction
 
 
