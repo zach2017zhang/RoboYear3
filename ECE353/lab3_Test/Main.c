@@ -435,7 +435,7 @@ code Main
       AvailableDice()
   endClass
 
-  behavior ForkMonitor
+  behavior GPMonitor
 
     method Init ()
       dice = 8
