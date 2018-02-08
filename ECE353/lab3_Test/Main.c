@@ -318,7 +318,7 @@ code Main
   function PrintHead ()
     var i: int
     print("        Barber")
-    for i = i to CUSTOMER_NUM
+    for i = i to CUSTOMER_NUM-1
       print("  ")
       printInt (i)
     endFor
@@ -329,7 +329,7 @@ code Main
       var
         oldStatus: int
       oldStatus = SetInterruptsTo (DISABLED)
-      print ("         start\n")
+      print ("        start\n")
       oldStatus = SetInterruptsTo (oldStatus)
     endFunction
   
@@ -337,7 +337,7 @@ code Main
       var
         oldStatus: int
       oldStatus = SetInterruptsTo (DISABLED)
-      print ("         end\n")
+      print ("        end\n")
       oldStatus = SetInterruptsTo (oldStatus)
     endFunction
     
