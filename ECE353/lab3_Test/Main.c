@@ -107,8 +107,7 @@ code Main
     fields
 monitorLock: Mutex -- The monitor lock
 status: array [5] of int 
-startEating: array [5] of Condition -- Signaled when eating can begin
-methods
+startEating: array [5] of Condition 
     methods
       Init ()
       PickupForks (p: int)
