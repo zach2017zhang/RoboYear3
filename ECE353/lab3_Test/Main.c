@@ -212,11 +212,11 @@ code Main
 
       waiting = 0
       customers_sem = new Semaphore
-      customers_sem.Init()
+      customers_sem.Init(0)
       barber_sem = new Semaphore
-      barber_sem.Init()
+      barber_sem.Init(0)
       barber_done_sem = new Semaphore
-      barber_done_sem.Init()
+      barber_done_sem.Init(0)
       access_lock = new Mutex
       access_lock.Init()
       
