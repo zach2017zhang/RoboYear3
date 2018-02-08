@@ -322,6 +322,7 @@ code Main
       print("  ")
       printInt (i)
     endFor
+    print("\n")
   endFunction
   
   function PrintBarberStart ()
@@ -345,14 +346,14 @@ code Main
         oldStatus: int
         i: int
       oldStatus = SetInterruptsTo (DISABLED)
-      for i = 1 to CHAIRS+1
+      for i = 1 to CHAIRS
         if i <= waiting
           print ("X")
         else
           print ("-")
         endIf
       endFor
-      print ("                  ")
+      print ("           ")
       for i = 0 to CUSTOMER_NUM-1
         if i == custn
           print (custs)
