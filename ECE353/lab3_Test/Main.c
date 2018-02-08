@@ -325,7 +325,7 @@ code Main
       oldStatus = SetInterruptsTo (oldStatus)
     endFunction
     
-  Function PrintCustomerState(customer_num: int, customer_state: ptr to array of char)
+  function PrintCustomerState(customer_num: int, customer_state: ptr to array of char)
       var
         oldStatus: int
       oldStatus = SetInterruptsTo (DISABLED)
