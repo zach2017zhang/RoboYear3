@@ -152,8 +152,10 @@ code Main
       self.PrintAllStatus()
       if status[(p+4)%5]==HUNGRY
         condition[(p+4)%5].Signal(&mutex)
+      endIf
       if status[(p+1)%5]==HUNGRY
         condition[(p+1)%5].Signal(&mutex)
+      endIf
       mutex.Unlock()
       endMethod
 
