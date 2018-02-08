@@ -200,7 +200,7 @@ code Main
     CHAIRS = 5
     CUSTOMER_NUM = 10
   var
-    customers: array [5] of Thread = new array of Thread {5 of new Thread }
+    customers: array [10] of Thread = new array of Thread {5 of new Thread }
     barber: Thread
     waiting: int
     access_lock: Mutex
@@ -224,7 +224,7 @@ code Main
       
       print ("Barber creating!\n")
       barber.Init("Barber")
-      customers[0].Fork (barber_fn, 0)
+      barber.Fork (barber_fn, 0)
       
       print ("Customer 0 creating!\n")
       customers[0].Init ("0")
@@ -265,10 +265,6 @@ code Main
       print ("Customer 9 creating!\n")
       customers[9].Init ("9")
       customers[9].Fork (customer_fn, 2)
-      
-      print ("Customer 10 creating!\n")
-      customers[10].Init ("10")
-      customers[10].Fork (customer_fn, 2)
 
      endFunction
 
