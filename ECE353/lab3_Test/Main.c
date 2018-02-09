@@ -11,9 +11,9 @@ code Main
 
   function main ()
       InitializeScheduler ()
-      -- DiningPhilosophers ()
+      DiningPhilosophers ()
       -- SleepingBarber()
-      GamingParlor()
+      -- GamingParlor()
       ThreadFinish()
       -- FatalError ("Need to implement")
     endFunction
@@ -234,34 +234,34 @@ code Main
       barber.Fork (barber_fn, 0)
       
       customers[0].Init ("0")
-      customers[0].Fork (customer_fn, 2)
+      customers[0].Fork (customer_fn, 6)
       
       customers[1].Init ("1")
-      customers[1].Fork (customer_fn, 2)
+      customers[1].Fork (customer_fn, 6)
       
       customers[2].Init ("2")
-      customers[2].Fork (customer_fn, 2)
+      customers[2].Fork (customer_fn, 6)
       
       customers[3].Init ("3")
-      customers[3].Fork (customer_fn, 2)
+      customers[3].Fork (customer_fn, 6)
       
       customers[4].Init ("4")
-      customers[4].Fork (customer_fn, 2)
+      customers[4].Fork (customer_fn, 6)
       
       customers[5].Init ("5")
-      customers[5].Fork (customer_fn, 2)
+      customers[5].Fork (customer_fn, 6)
       
       customers[6].Init ("6")
-      customers[6].Fork (customer_fn, 2)
+      customers[6].Fork (customer_fn, 6)
       
       customers[7].Init ("7")
-      customers[7].Fork (customer_fn, 2)
+      customers[7].Fork (customer_fn, 6)
       
       customers[8].Init ("8")
-      customers[8].Fork (customer_fn, 2)
+      customers[8].Fork (customer_fn, 6)
       
       customers[9].Init ("9")
-      customers[9].Fork (customer_fn, 2)
+      customers[9].Fork (customer_fn, 6)
 
      endFunction
 
@@ -398,9 +398,13 @@ code Main
      endFunction
 
   function PlayGame (game: int)
-      gpmon.Request(game)
-      currentThread.Yield()
-      gpmon.Return(game)
+      var
+	i: int
+      for i = 1 to 5
+        gpmon.Request(game)
+        currentThread.Yield()
+        gpmon.Return(game)
+      endFor
     endFunction
 
   class GPMonitor
