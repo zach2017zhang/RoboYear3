@@ -126,7 +126,7 @@ def grad_descent(f, df, loss, x, y, init_t,ada_learning_rate = True,momentum = T
             t -= v
         else:
             t -= curr_alpha*df(y, f(x,t), x)
-        if iter % 500 == 0:
+        if iter % 50 == 0:
             print "Iter", iter
             if currloss < loss(y, f(x,t)) and ada_learning_rate:
                 curr_alpha = curr_alpha/2
@@ -284,6 +284,9 @@ def part4_grad_descent(f, df, loss, x, y, init_t, alpha=0.0001, max_iter=3000, E
     return t
 
 def part4_performance(x, y,Wb):
+    """
+    report performance on the test set
+    """
     output = part4_forward(x,Wb)
     result = 0
     print output.T.shape
@@ -319,7 +322,7 @@ def part5_grad_descent(f, df, loss, x, y, init_t, alpha=0.0001, max_iter=1500, E
         prev_t = t.copy()
         v = damping*v+curr_alpha*df(y, f(x,t), x)
         t -= v
-        if iter % 500 == 0:
+        if iter % 50 == 0:
             print "Iter", iter
             if currloss < loss(y, f(x,t)):
                 curr_alpha = curr_alpha/2
