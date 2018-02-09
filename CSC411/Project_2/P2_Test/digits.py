@@ -104,7 +104,7 @@ def fully_connected_layer_backward(dy,x):
     db = np.matmul(dy, np.ones([x.shape[0],1]))
     return dW,db
 
-def grad_descent(f, df, loss, x, y, init_t,ada_learning_rate = True,momentum = True, alpha=0.0001, max_iter=1500, EPS = 1e-5, damping = 0.9):
+def grad_descent(f, df, loss, x, y, init_t,ada_learning_rate = True,momentum = True, alpha=0.0001, max_iter=500, EPS = 1e-5, damping = 0.9):
     """
     Input:
         ada_learning_rate: adaptive learning rate flag
@@ -264,25 +264,6 @@ def part4_backward(y,output,x):
     dW,db = fully_connected_layer_backward(dy,x)
     return np.hstack((dW, db))
 
-def part4_grad_descent(f, df, loss, x, y, init_t, alpha=0.0001, max_iter=3000, EPS = 1e-5):
-    prev_t = init_t-10*EPS
-    t = init_t.copy()
-    currloss = loss(y, f(x,t))
-    curr_alpha = alpha
-    iter  = 0
-    while norm(t - prev_t) >  EPS and iter < max_iter:
-        prev_t = t.copy()
-        t -= curr_alpha*df(y, f(x,t), x)
-        if iter % 500 == 0:
-            print "Iter", iter
-            if currloss < loss(y, f(x,t)):
-                curr_alpha = curr_alpha/2
-            currloss = loss(y, f(x,t))
-            print currloss
-            #print "Gradient: ", df(x, y, t), "\n"
-        iter += 1
-    return t
-
 def part4_performance(x, y,Wb):
     """
     report performance on the test set
@@ -301,46 +282,19 @@ def part4_performance(x, y,Wb):
 def part4():
     #Load the MNIST digit data
     training_x, training_y, test_x, test_y = create_sets()     
-    #create weights
+    #create weights    
     np.random.seed(0)
     Wb = np.random.normal(0.,0.5,[num_digits,input_size+1])
     part4_performance(test_x, test_y,Wb)
-    trained_Wb = part4_grad_descent(part4_forward, part4_backward, NLL, training_x, training_y.T, Wb)
+    trained_Wb = grad_descent(part4_forward, part4_backward, NLL, training_x, training_y.T, Wb,momentum = False)
     part4_performance(test_x, test_y,trained_Wb)
 
 # Part 5
 # -----------------------------------------------------------------------------
-
-def part5_grad_descent(f, df, loss, x, y, init_t, alpha=0.0001, max_iter=1500, EPS = 1e-5, damping = 0.9):
-    v = 0
-    prev_t = init_t-10*EPS
-    t = init_t.copy()
-    currloss = loss(y, f(x,t))
-    curr_alpha = alpha
-    iter  = 0
-    while norm(t - prev_t) >  EPS and iter < max_iter:
-        prev_t = t.copy()
-        v = damping*v+curr_alpha*df(y, f(x,t), x)
-        t -= v
-        if iter % 50 == 0:
-            print "Iter", iter
-            if currloss < loss(y, f(x,t)):
-                curr_alpha = curr_alpha/2
-            currloss = loss(y, f(x,t))
-            print currloss
-            #print "Gradient: ", df(x, y, t), "\n"
-        iter += 1
-    return t
-
 def part5():
     #Load the MNIST digit data
     training_x, training_y, test_x, test_y = create_sets()     
     #create weights
-    np.random.seed(0)
-    Wb = np.random.normal(0.,0.5,[num_digits,input_size+1])
-    part4_performance(test_x, test_y,Wb)
-    trained_Wb = part5_grad_descent(part4_forward, part4_backward, NLL, training_x, training_y.T, Wb)
-    part4_performance(test_x, test_y,trained_Wb) 
     
     np.random.seed(0)
     Wb = np.random.normal(0.,0.5,[num_digits,input_size+1])
@@ -353,6 +307,6 @@ if __name__ == "__main__":
     #part1()
     #part2()
     #part3()
-    #part4()
-    part5()
+    part4()
+    #part5()
     
