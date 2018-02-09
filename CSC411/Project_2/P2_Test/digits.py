@@ -104,7 +104,7 @@ def fully_connected_layer_backward(dy,x):
     db = np.matmul(dy, np.ones([x.shape[0],1]))
     return dW,db
 
-def grad_descent(f, df, loss, x, y, init_t,ada_learning_rate = True,momentum = True, alpha=0.0001, max_iter=3000, EPS = 1e-5, damping = 0.9):
+def grad_descent(f, df, loss, x, y, init_t,ada_learning_rate = True,momentum = True, alpha=0.0001, max_iter=1500, EPS = 1e-5, damping = 0.9):
     """
     Input:
         ada_learning_rate: adaptive learning rate flag
@@ -308,7 +308,7 @@ def part4():
 # Part 5
 # -----------------------------------------------------------------------------
 
-def part5_grad_descent(f, df, loss, x, y, init_t, alpha=0.0001, max_iter=3000, EPS = 1e-5, damping = 0.9):
+def part5_grad_descent(f, df, loss, x, y, init_t, alpha=0.0001, max_iter=1500, EPS = 1e-5, damping = 0.9):
     v = 0
     prev_t = init_t-10*EPS
     t = init_t.copy()
@@ -337,13 +337,19 @@ def part5():
     Wb = np.random.normal(0.,0.5,[num_digits,input_size+1])
     part4_performance(test_x, test_y,Wb)
     trained_Wb = part5_grad_descent(part4_forward, part4_backward, NLL, training_x, training_y.T, Wb)
-    part4_performance(test_x, test_y,trained_Wb)   
+    part4_performance(test_x, test_y,trained_Wb) 
+    
+    np.random.seed(0)
+    Wb = np.random.normal(0.,0.5,[num_digits,input_size+1])
+    part4_performance(test_x, test_y,Wb)
+    trained_Wb = grad_descent(part4_forward, part4_backward, NLL, training_x, training_y.T, Wb)
+    part4_performance(test_x, test_y,trained_Wb) 
     
 if __name__ == "__main__":
     os.chdir(os.path.dirname(__file__))
     #part1()
     #part2()
-    part3()
+    #part3()
     #part4()
-    #part5()
+    part5()
     
