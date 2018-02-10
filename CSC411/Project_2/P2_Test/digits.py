@@ -354,7 +354,7 @@ def part6_get_loss_2var(w1,w2,w1_r,w1_c,w2_r,w2_c,Wb,x,y):
     output = forward(x,var_Wb)
     return NLL(y.T, output)
 
-def part6_grad_descent_2var(f, df, loss, x, y, init_t, w1,w2,w1_r,w1_c,w2_r,w2_c,ada_learning_rate = True,momentum = True, damping = 0.9, alpha=0.0001, max_iter=500, EPS = 1e-5):
+def part6_grad_descent_2var(f, df, loss, x, y, init_t, w1,w2,w1_r,w1_c,w2_r,w2_c,ada_learning_rate = True,momentum = True, damping = 0.9, alpha=0.0001, max_iter=50, EPS = 1e-5):
     """
     Input:
         ada_learning_rate: adaptive learning rate flag
@@ -378,7 +378,7 @@ def part6_grad_descent_2var(f, df, loss, x, y, init_t, w1,w2,w1_r,w1_c,w2_r,w2_c
     
     iter  = 0
     while norm(t - prev_t) >  EPS and iter < max_iter:
-        if iter % 10 == 0:
+        if iter % 1 == 0:
             traj.append((t[w1_r,w1_c],t[w2_r,w2_c]))
         #normal gradient descent
         prev_t = t.copy()
@@ -411,16 +411,18 @@ def part6():
     training_x, training_y, test_x, test_y = create_sets()     
 
     np.random.seed(1)
+    
     #create weights
     Wb = np.random.normal(0.,0.001,[num_digits,input_size+1])
     trained_Wb = grad_descent(forward, backward, NLL, training_x, training_y.T, Wb,alpha=0.000001)
     
+    #ramdomly choose W1 and W2 at the center of the image
     w1_c = 28*(input_dim/2  + int(round(6*np.random.rand())) - 3) + input_dim/2  + int(round(6*np.random.rand())) - 3
     w2_c = 28*(input_dim/2  + int(round(6*np.random.rand())) - 3) + input_dim/2  + int(round(6*np.random.rand())) - 3
     w1_r = int(round((num_digits-1)*np.random.rand()))
     w2_r = int(round((num_digits-1)*np.random.rand()))
     
-    
+    #contour plot
     w1s = np.arange(-2, 2, 0.1)
     w2s = np.arange(-2, 2, 0.1)
     w1z, w2z = np.meshgrid(w1s, w2s)
@@ -429,10 +431,10 @@ def part6():
         for j, w2 in enumerate(w2s):
             C[j,i] = part6_get_loss_2var(w1,w2,w1_r,w1_c,w2_r,w2_c,trained_Wb,training_x,training_y)
     
-    init_w1 = -1
-    init_w2 = -1        
+    init_w1 = -2
+    init_w2 = -2        
     gd_traj = part6_grad_descent_2var(forward, backward, NLL, training_x, training_y.T, trained_Wb, init_w1,init_w2,w1_r,w1_c,w2_r,w2_c, alpha=0.0025,ada_learning_rate = False, momentum = False)
-    mo_traj = part6_grad_descent_2var(forward, backward, NLL, training_x, training_y.T, trained_Wb, init_w1,init_w2,w1_r,w1_c,w2_r,w2_c, alpha=0.0025,ada_learning_rate = False)
+    mo_traj = part6_grad_descent_2var(forward, backward, NLL, training_x, training_y.T, trained_Wb, init_w1,init_w2,w1_r,w1_c,w2_r,w2_c, alpha=0.0001,ada_learning_rate = False)
     
     CS = plt.contour(w1z, w2z, C, camp=cm.coolwarm)
     plt.plot([a for a, b in gd_traj], [b for a,b in gd_traj], 'yo-', label="No Momentum")
