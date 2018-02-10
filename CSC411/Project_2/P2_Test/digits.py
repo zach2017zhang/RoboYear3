@@ -163,7 +163,7 @@ def grad_descent(f, df, loss, x, y, init_t,ada_learning_rate = True, learning_cu
     while norm(t - prev_t) >  EPS and iter < max_iter:
         
         #plot learning curve
-        if learning_curve and iter % 20 == 0:
+        if learning_curve and iter % 5 == 0:
             num_iter.append(iter)
             performance_training.append(performance(x, y.T, t,print_output = False))
             performance_test.append(performance(tx, ty.T, t,print_output = False))
@@ -304,9 +304,27 @@ def part4():
     training_x, training_y, test_x, test_y = create_sets()     
     #create weights    
     np.random.seed(0)
-    Wb = np.random.normal(0.,0.5,[num_digits,input_size+1])
-    trained_Wb = grad_descent(forward, backward, NLL, training_x, training_y.T, Wb,momentum = False,learning_curve=True,figure = "part4f1", tx=test_x, ty=test_y.T)
-    
+    Wb = np.random.normal(0.,0.01,[num_digits,input_size+1])
+    trained_Wb = grad_descent(forward, backward, NLL, training_x, training_y.T, Wb,momentum = False,learning_curve=True, max_iter=1000, alpha=0.0001,figure = "part4f1", tx=test_x, ty=test_y.T)
+    trained_W = trained_Wb[:,:-1]
+
+    for i in range(trained_W.shape[0]):
+        plt.figure(i+1)
+        plt.imshow((trained_W[i,:]).reshape(28,28),interpolation='none', cmap=cm.coolwarm)
+        print "Digit "+str(i)+ "is: \n"
+        plt.show()
+        plt.imsave("figures/part4f"+str(i+2)+".jpg",(trained_W[i,:]).reshape(28,28), cmap=cm.coolwarm)
+
+    """
+    f, axarr = plt.subplots(5, 2)
+    for i in range(5):
+        for j in range(2):
+            axarr[i, j].imshow((trained_W[i*2+j,:]).reshape(28,28),interpolation='none', cmap=cm.coolwarm)
+            axarr[i, j].axes.get_xaxis().set_visible(False)
+            axarr[i, j].axes.get_yaxis().set_visible(False)
+    plt.savefig('figures/part1f2.jpg')
+    plt.show()
+    """
     return 0
 
 # Part 5
@@ -392,7 +410,7 @@ def part6():
     #Load the MNIST digit data
     training_x, training_y, test_x, test_y = create_sets()     
 
-    np.random.seed(0)
+    np.random.seed(1)
     #create weights
     Wb = np.random.normal(0.,0.001,[num_digits,input_size+1])
     trained_Wb = grad_descent(forward, backward, NLL, training_x, training_y.T, Wb,alpha=0.000001)
@@ -413,14 +431,15 @@ def part6():
     
     init_w1 = -1
     init_w2 = -1        
-    gd_traj = part6_grad_descent_2var(forward, backward, NLL, training_x, training_y.T, trained_Wb, init_w1,init_w2,w1_r,w1_c,w2_r,w2_c, alpha=0.0005,momentum = False)
-    mo_traj = part6_grad_descent_2var(forward, backward, NLL, training_x, training_y.T, trained_Wb, init_w1,init_w2,w1_r,w1_c,w2_r,w2_c, alpha=0.0001)
+    gd_traj = part6_grad_descent_2var(forward, backward, NLL, training_x, training_y.T, trained_Wb, init_w1,init_w2,w1_r,w1_c,w2_r,w2_c, alpha=0.0025,ada_learning_rate = False, momentum = False)
+    mo_traj = part6_grad_descent_2var(forward, backward, NLL, training_x, training_y.T, trained_Wb, init_w1,init_w2,w1_r,w1_c,w2_r,w2_c, alpha=0.0025,ada_learning_rate = False)
     
     CS = plt.contour(w1z, w2z, C, camp=cm.coolwarm)
     plt.plot([a for a, b in gd_traj], [b for a,b in gd_traj], 'yo-', label="No Momentum")
     plt.plot([a for a, b in mo_traj], [b for a,b in mo_traj], 'go-', label="Momentum")
     plt.legend(loc='top left')
     plt.title('Contour plot')
+    plt.savefig('figures/part6f1.jpg')
     plt.show()
     
 if __name__ == "__main__":
