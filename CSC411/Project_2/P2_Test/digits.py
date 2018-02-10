@@ -18,6 +18,7 @@ import os
 
 # Constants
 # -----------------------------------------------------------------------------
+input_dim = 28
 input_size = 28*28
 num_digits = 10
 
@@ -104,43 +105,97 @@ def fully_connected_layer_backward(dy,x):
     db = np.matmul(dy, np.ones([x.shape[0],1]))
     return dW,db
 
-def grad_descent(f, df, loss, x, y, init_t,ada_learning_rate = True,momentum = True, alpha=0.0001, max_iter=500, EPS = 1e-5, damping = 0.9):
+def NLL(y, output):
+    """
+    Negative log loss function
+    """
+    return -sum(y*log(output)) 
+    
+def forward(x, Wb):
+    W1 = Wb[:,:-1]
+    b1 = Wb[:,-1:]
+    L1 = fully_connected_layer_forward(x,W1,b1)
+    output = softmax_forward(L1)
+    return output
+
+def backward(y,output,x):
+    dy = softmax_backward(y,output)
+    dW,db = fully_connected_layer_backward(dy,x)
+    return np.hstack((dW, db))
+
+def performance(x, y,Wb, print_output = True,report = "test set"):
+    """
+    report performance on the test set
+    """
+    output = forward(x,Wb)
+    result = 0.
+    for i in range(x.shape[0]):
+        if argmax(output.T[i]) == argmax(y[i]):
+            result+=1
+    
+    if print_output:
+        print "\nPerformance on "+report+ ": " +str(result)+"/"+str(x.shape[0])+"\n"
+    
+    return result/x.shape[0]
+    
+def grad_descent(f, df, loss, x, y, init_t,ada_learning_rate = True, learning_curve=False, \
+                 tx=[], ty=[], figure = 'default',momentum = True, damping = 0.9, alpha=0.0001, max_iter=500, EPS = 1e-5):
     """
     Input:
         ada_learning_rate: adaptive learning rate flag
         momentum: momentum flag
         damping: momentum danping ratio
     Output:
-        
     """
-    v = 0
+    v = np.zeros((init_t.shape[0],init_t.shape[1])) #used for momentum
+    
     prev_t = init_t-10*EPS
     t = init_t.copy()
-    currloss = loss(y, f(x,t))
-    curr_alpha = alpha
+    
+    currloss = loss(y, f(x,t)) # used for adaptive alpha
+    curr_alpha = alpha # used for adaptive alpha
+    
     iter  = 0
+    num_iter = []
+    performance_training = []
+    performance_test = []
+    
     while norm(t - prev_t) >  EPS and iter < max_iter:
+        
+        #plot learning curve
+        if learning_curve and iter % 20 == 0:
+            num_iter.append(iter)
+            performance_training.append(performance(x, y.T, t,print_output = False))
+            performance_test.append(performance(tx, ty.T, t,print_output = False))
+        
+        #normal gradient descent
         prev_t = t.copy()
         if momentum:
             v = damping*v+curr_alpha*df(y, f(x,t), x)
             t -= v
         else:
             t -= curr_alpha*df(y, f(x,t), x)
-        if iter % 50 == 0:
+        
+        if iter % 5 == 0:
             print "Iter", iter
             if currloss < loss(y, f(x,t)) and ada_learning_rate:
                 curr_alpha = curr_alpha/2
             currloss = loss(y, f(x,t))
             print currloss
             #print "Gradient: ", df(x, y, t), "\n"
+        
         iter += 1
+    
+    if learning_curve:
+        plt.plot(num_iter, performance_training,'^-')
+        plt.plot(num_iter, performance_test,'^-')
+        plt.legend(['training', 'test'])
+        plt.xlabel('Number of Iterations')
+        plt.ylabel('Performance')
+        plt.savefig('figures/'+figure+'.jpg')
+        plt.show()
+    
     return t
-
-def NLL(y, output):
-    """
-    Negative log loss function
-    """
-    return -sum(y*log(output)) 
 
 # Part 1
 # -----------------------------------------------------------------------------
@@ -172,14 +227,6 @@ def part1():
     
 # Part 2
 # -----------------------------------------------------------------------------    
-def part2_forward(x, W1, b1):
-    """
-    Forward pass of the nn built in part2
-    """
-    L1 = fully_connected_layer_forward(x,W1,b1)
-    output = softmax_forward(L1)
-    return L1, output
-
 def part2():
     """
     Done!
@@ -187,55 +234,50 @@ def part2():
     required funcitons are defined above.
     """
     #create weights
-    W1 = np.random.normal(0.,0.5,[num_digits,input_size])
-    b1 = np.random.normal(0.,0.5,[num_digits,1])
+    Wb = np.random.normal(0.,0.5,[num_digits,input_size+1])
     
     #Load the MNIST digit data, and provide an example input
     M = load_mnist()
     x = M["train5"][148:149]
     
     # Calculate the output, L1 is the node values in the first layer
-    L1, output = part2_forward(x, W1, b1)
+    output = forward(x, Wb)
     
     print x.shape
-    print L1
     print output
     
     return 0
 
 # Part 3
 # -----------------------------------------------------------------------------
-def part3_backward(y,output,x):
-    """
-    Backward pass of the nn built in part2
-    """
-    dy = softmax_backward(y,output)
-    dW,db = fully_connected_layer_backward(dy,x)
-    print dW.shape
-    print db.shape
-    return dW, db
-    
 def part3_grad_check(training_x, training_y, test_x, test_y):
     """
     To do: improve this function to perform gradient check and include in the report
     """
     h = 0.0000001
     #create weights
-    W1 = np.random.normal(0.,0.5,[num_digits,input_size])
-    b1 = np.random.normal(0.,0.5,[num_digits,1])
+    Wb = np.random.normal(0.,0.5,[num_digits,input_size+1])
     
-    W1p = W1.copy()
-    b1p = b1.copy()
-    b1p[5] += h
+    output = forward(training_x, Wb)
+    dWb = backward(training_y.T,output,training_x)
     
-    L1_1, output_1 = part2_forward(training_x, W1, b1)
-    L1_2, output_2 = part2_forward(training_x, W1, b1p)
+    error = []
+    sample = 10
+    while sample > 0:
+        row = int(round((num_digits-1)*np.random.rand()))
+        col = int(round((input_size)*np.random.rand()))
+        if not dWb[row,col] == 0:
+            Wbp = Wb.copy()
+            Wbp[row,col] += h
+            outputp = forward(training_x, Wbp)
+            finite_diff = (NLL(training_y.T, outputp)-NLL(training_y.T, output))/h
+            error.append(abs(finite_diff-dWb[row,col])/(abs(finite_diff)+abs(dWb[row,col])))
+            sample -= 1
     
-    dW,db = part3_backward(training_y.T,output_1,training_x)
+    error_mean = np.mean(error)
+    error_std = np.std(error)
+    print "Relative error is:"+ str(error_mean)+" +/- "+str(error_std)
     
-    print db[5]
-    finite_diff = (NLL(training_y.T, output_2)-NLL(training_y.T, output_1))/h
-    print finite_diff
     return 0
 
 def part3():
@@ -252,61 +294,141 @@ def part3():
  
 # Part 4
 # -----------------------------------------------------------------------------
-def part4_forward(x, Wb):
-    W1 = Wb[:,:-1]
-    b1 = Wb[:,-1:]
-    L1 = fully_connected_layer_forward(x,W1,b1)
-    output = softmax_forward(L1)
-    return output
-
-def part4_backward(y,output,x):
-    dy = softmax_backward(y,output)
-    dW,db = fully_connected_layer_backward(dy,x)
-    return np.hstack((dW, db))
-
-def part4_performance(x, y,Wb):
-    """
-    report performance on the test set
-    """
-    output = part4_forward(x,Wb)
-    result = 0
-    print output.T.shape
-    print y.shape
-    for i in range(10000):
-        if argmax(output.T[i]) == argmax(y[i]):
-            result+=1
-    print "\nPerformance: "
-    print result
-    print "/10000\n"
-
 def part4():
+    try:
+        os.makedirs("figures")
+    except OSError:
+        pass
+    
     #Load the MNIST digit data
     training_x, training_y, test_x, test_y = create_sets()     
     #create weights    
     np.random.seed(0)
     Wb = np.random.normal(0.,0.5,[num_digits,input_size+1])
-    part4_performance(test_x, test_y,Wb)
-    trained_Wb = grad_descent(part4_forward, part4_backward, NLL, training_x, training_y.T, Wb,momentum = False)
-    part4_performance(test_x, test_y,trained_Wb)
+    trained_Wb = grad_descent(forward, backward, NLL, training_x, training_y.T, Wb,momentum = False,learning_curve=True,figure = "part4f1", tx=test_x, ty=test_y.T)
+    
+    return 0
 
 # Part 5
 # -----------------------------------------------------------------------------
 def part5():
+    try:
+        os.makedirs("figures")
+    except OSError:
+        pass
+    
     #Load the MNIST digit data
     training_x, training_y, test_x, test_y = create_sets()     
-    #create weights
-    
+
     np.random.seed(0)
+    #create weights
     Wb = np.random.normal(0.,0.5,[num_digits,input_size+1])
-    part4_performance(test_x, test_y,Wb)
-    trained_Wb = grad_descent(part4_forward, part4_backward, NLL, training_x, training_y.T, Wb)
-    part4_performance(test_x, test_y,trained_Wb) 
+    trained_Wb = grad_descent(forward, backward, NLL, training_x, training_y.T, Wb,learning_curve=True,figure = "part4f2", tx=test_x, ty=test_y.T)
+    
+    return 0
+
+# Part 6
+# -----------------------------------------------------------------------------
+def part6_get_loss_2var(w1,w2,w1_r,w1_c,w2_r,w2_c,Wb,x,y):
+    var_Wb = Wb.copy()
+    var_Wb[w1_r,w1_c] = w1
+    var_Wb[w2_r,w2_c] = w2
+    output = forward(x,var_Wb)
+    return NLL(y.T, output)
+
+def part6_grad_descent_2var(f, df, loss, x, y, init_t, w1,w2,w1_r,w1_c,w2_r,w2_c,ada_learning_rate = True,momentum = True, damping = 0.9, alpha=0.0001, max_iter=500, EPS = 1e-5):
+    """
+    Input:
+        ada_learning_rate: adaptive learning rate flag
+        momentum: momentum flag
+        damping: momentum danping ratio
+    Output:
+    """
+    v = np.zeros((init_t.shape[0],init_t.shape[1])) #used for momentum
+    
+    var_t = init_t.copy()
+    var_t[w1_r,w1_c] = w1
+    var_t[w2_r,w2_c] = w2    
+
+    prev_t = var_t-10*EPS
+    t = var_t.copy()
+    
+    traj = []
+    
+    currloss = loss(y, f(x,t)) # used for adaptive alpha
+    curr_alpha = alpha # used for adaptive alpha
+    
+    iter  = 0
+    while norm(t - prev_t) >  EPS and iter < max_iter:
+        if iter % 10 == 0:
+            traj.append((t[w1_r,w1_c],t[w2_r,w2_c]))
+        #normal gradient descent
+        prev_t = t.copy()
+        if momentum:
+            v = damping*v+curr_alpha*df(y, f(x,t), x)
+            t[w1_r,w1_c] -= v[w1_r,w1_c]
+            t[w2_r,w2_c] -= v[w2_r,w2_c]
+        else:
+            t[w1_r,w1_c] -= curr_alpha*(df(y, f(x,t), x)[w1_r,w1_c])
+            t[w2_r,w2_c] -= curr_alpha*(df(y, f(x,t), x)[w2_r,w2_c])
+        
+        if iter % 5 == 0:
+            print "Iter", iter
+            if currloss < loss(y, f(x,t)) and ada_learning_rate:
+                curr_alpha = curr_alpha/2
+            currloss = loss(y, f(x,t))
+            print currloss
+            #print "Gradient: ", df(x, y, t), "\n"
+        iter += 1
+    
+    return traj
+
+def part6():
+    try:
+        os.makedirs("figures")
+    except OSError:
+        pass
+
+    #Load the MNIST digit data
+    training_x, training_y, test_x, test_y = create_sets()     
+
+    np.random.seed(0)
+    #create weights
+    Wb = np.random.normal(0.,0.001,[num_digits,input_size+1])
+    trained_Wb = grad_descent(forward, backward, NLL, training_x, training_y.T, Wb,alpha=0.000001)
+    
+    w1_c = 28*(input_dim/2  + int(round(6*np.random.rand())) - 3) + input_dim/2  + int(round(6*np.random.rand())) - 3
+    w2_c = 28*(input_dim/2  + int(round(6*np.random.rand())) - 3) + input_dim/2  + int(round(6*np.random.rand())) - 3
+    w1_r = int(round((num_digits-1)*np.random.rand()))
+    w2_r = int(round((num_digits-1)*np.random.rand()))
+    
+    
+    w1s = np.arange(-2, 2, 0.1)
+    w2s = np.arange(-2, 2, 0.1)
+    w1z, w2z = np.meshgrid(w1s, w2s)
+    C = np.zeros([w1s.size, w2s.size])
+    for i, w1 in enumerate(w1s):
+        for j, w2 in enumerate(w2s):
+            C[j,i] = part6_get_loss_2var(w1,w2,w1_r,w1_c,w2_r,w2_c,trained_Wb,training_x,training_y)
+    
+    init_w1 = -1
+    init_w2 = -1        
+    gd_traj = part6_grad_descent_2var(forward, backward, NLL, training_x, training_y.T, trained_Wb, init_w1,init_w2,w1_r,w1_c,w2_r,w2_c, alpha=0.0005,momentum = False)
+    mo_traj = part6_grad_descent_2var(forward, backward, NLL, training_x, training_y.T, trained_Wb, init_w1,init_w2,w1_r,w1_c,w2_r,w2_c, alpha=0.0001)
+    
+    CS = plt.contour(w1z, w2z, C, camp=cm.coolwarm)
+    plt.plot([a for a, b in gd_traj], [b for a,b in gd_traj], 'yo-', label="No Momentum")
+    plt.plot([a for a, b in mo_traj], [b for a,b in mo_traj], 'go-', label="Momentum")
+    plt.legend(loc='top left')
+    plt.title('Contour plot')
+    plt.show()
     
 if __name__ == "__main__":
     os.chdir(os.path.dirname(__file__))
     #part1()
     #part2()
     #part3()
-    part4()
+    #part4()
     #part5()
+    part6()
     
