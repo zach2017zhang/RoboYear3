@@ -700,7 +700,7 @@ code Kernel
           threadManagerLock.Init()
           aThreadBecameFree.Init()
           for i = 0 to MAX_NUMBER_OF_PROCESSES-1 by 1
-            threadTable[i].Init("ThreadName")
+            threadTable[i].Init("Thread")
             threadTable[i].status = UNUSED
             freeList.AddToEnd(&threadTable[i])
           endFor
@@ -852,6 +852,21 @@ code Kernel
         -- the one and only "processManager" object.  
         --
         -- NOT IMPLEMENTED
+        var
+          i: int
+          processTable = new array of ProcessControlBlock {MAX_NUMBER_OF_PROCESSES of new ProcessControlBlock}
+          processManagerLock = new Mutex
+          aProcessBecameFree = new Condition
+          aProcessDied = new Condition
+          freeList = new List[ProcessControlBlock]
+          for i = 0 to MAX_NUMBER_OF_PROCESSES-1 by 1
+            processTable[i].Init()
+            processTable[i].status = FREE
+            freeList.AddToEnd(&processTable[i])
+          endFor
+          processManagerLock.Init()
+          aProcessBecameFree.Init()
+          aProcessDied.Init()
         endMethod
 
       ----------  ProcessManager . Print  ----------
@@ -907,7 +922,18 @@ code Kernel
         -- until one is available.
         --
           -- NOT IMPLEMENTED
-          return null
+        var
+          NewProcessPtr: ptr to ProcessControlBlock
+          processManagerLock.Lock()
+          while freeList.IsEmpty()
+            aProcessBecameFree.Wait(&processManagerLock)
+          endWhile
+          NewProcessPtr = freeList.Remove()
+          (*NewProcessPtr).pid = nextPid
+          nextPid = nextPid + 1
+          (*NewProcessPtr).status = ACTIVE
+          processManagerLock.Unlock()
+          return NewProcessPtr
         endMethod
 
       ----------  ProcessManager . FreeProcess  ----------
@@ -918,6 +944,11 @@ code Kernel
         -- to the FREE list.
         --
           -- NOT IMPLEMENTED
+          processManagerLock.Lock()
+          (*p).status = FREE
+          freeList.AddToEnd(p)
+          aProcessBecameFree.Signal(&processManagerLock)
+          processManagerLock.Unlock()
         endMethod
 
 
