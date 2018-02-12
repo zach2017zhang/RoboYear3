@@ -397,7 +397,7 @@ def part6_get_loss_2var(w1,w2,w1_r,w1_c,w2_r,w2_c,Wb,x,y):
     output = forward(x,var_Wb)
     return NLL(y.T, output)
 
-def part6_grad_descent_2var(f, df, loss, x, y, init_t, w1,w2,w1_r,w1_c,w2_r,w2_c,ada_learning_rate = True,momentum = True, damping = 0.9, alpha=0.0001, max_iter=50, EPS = 1e-5):
+def part6_grad_descent_2var(f, df, loss, x, y, init_t, w1,w2,w1_r,w1_c,w2_r,w2_c,ada_learning_rate = True,momentum = True, damping = 0.6, alpha=0.0001, max_iter=20, EPS = 1e-5):
     """
     Input:
         ada_learning_rate: adaptive learning rate flag
@@ -405,11 +405,19 @@ def part6_grad_descent_2var(f, df, loss, x, y, init_t, w1,w2,w1_r,w1_c,w2_r,w2_c
         damping: momentum danping ratio
     Output:
     """
+    if momentum == True:
+        ensured_damping = damping
+    else:
+        ensured_damping = 0
+        
     v = np.zeros((init_t.shape[0],init_t.shape[1])) #used for momentum
     
     var_t = init_t.copy()
     var_t[w1_r,w1_c] = w1
-    var_t[w2_r,w2_c] = w2    
+    var_t[w2_r,w2_c] = w2
+
+    print var_t[w1_r,w1_c],var_t[w2_r,w2_c]
+    print momentum
 
     prev_t = var_t-10*EPS
     t = var_t.copy()
@@ -425,13 +433,10 @@ def part6_grad_descent_2var(f, df, loss, x, y, init_t, w1,w2,w1_r,w1_c,w2_r,w2_c
             traj.append((t[w1_r,w1_c],t[w2_r,w2_c]))
         #normal gradient descent
         prev_t = t.copy()
-        if momentum:
-            v = damping*v+curr_alpha*df(y, f(x,t), x)
-            t[w1_r,w1_c] -= v[w1_r,w1_c]
-            t[w2_r,w2_c] -= v[w2_r,w2_c]
-        else:
-            t[w1_r,w1_c] -= curr_alpha*(df(y, f(x,t), x)[w1_r,w1_c])
-            t[w2_r,w2_c] -= curr_alpha*(df(y, f(x,t), x)[w2_r,w2_c])
+        
+        v = ensured_damping*v + curr_alpha*df(y, f(x,t), x)
+        t[w1_r,w1_c] = t[w1_r,w1_c] - v[w1_r,w1_c]
+        t[w2_r,w2_c] = t[w2_r,w2_c] - v[w2_r,w2_c]
         
         if iter % 5 == 0:
             print "Iter", iter
@@ -469,7 +474,7 @@ def part6():
     #train the nn, only need to run once
     #part6_train(training_x, training_y,validation_x,validation_y, test_x, test_y)
     
-    np.random.seed(2)
+    np.random.seed(3)
     
     trained_Wb = np.load("data/trained_Wb.npy")
     
@@ -479,20 +484,22 @@ def part6():
     w1_r = int(round((num_digits-1)*np.random.rand()))
     w2_r = int(round((num_digits-1)*np.random.rand()))
     
+    print "Pick two variables located at (%d,%d) and (%d,%d)" % (w1_r,w1_c,w2_r,w2_c)
+    
     #contour plot
-    w1s = np.arange(-2, 2, 0.1)
-    w2s = np.arange(-2, 2, 0.1)
+    w1s = np.arange(trained_Wb[w1_r][w1_c]-2, trained_Wb[w1_r][w1_c]+2, 0.1)
+    w2s = np.arange(trained_Wb[w2_r][w2_c]-2, trained_Wb[w2_r][w2_c]+2, 0.1)
     w1z, w2z = np.meshgrid(w1s, w2s)
     C = np.zeros([w1s.size, w2s.size])
     for i, w1 in enumerate(w1s):
         for j, w2 in enumerate(w2s):
             C[j,i] = part6_get_loss_2var(w1,w2,w1_r,w1_c,w2_r,w2_c,trained_Wb,training_x,training_y)
     
-    init_w1 = -1.6
-    init_w2 = -1.6        
-    gd_traj = part6_grad_descent_2var(forward, backward, NLL, training_x, training_y.T, trained_Wb, init_w1,init_w2,w1_r,w1_c,w2_r,w2_c, alpha=0.0025,ada_learning_rate = False, momentum = False)
-    mo_traj = part6_grad_descent_2var(forward, backward, NLL, training_x, training_y.T, trained_Wb, init_w1,init_w2,w1_r,w1_c,w2_r,w2_c, alpha=0.0025,ada_learning_rate = False, damping = 0.4)
-    
+    init_w1 = trained_Wb[w1_r][w1_c]-1.5
+    init_w2 = trained_Wb[w2_r][w2_c]+1.0
+    gd_traj = part6_grad_descent_2var(forward, backward, NLL, training_x, training_y.T, trained_Wb, init_w1,init_w2,w1_r,w1_c,w2_r,w2_c, alpha=0.0012,ada_learning_rate = False, momentum = False, damping = 0)
+    mo_traj = part6_grad_descent_2var(forward, backward, NLL, training_x, training_y.T, trained_Wb, init_w1,init_w2,w1_r,w1_c,w2_r,w2_c, alpha=0.0012,ada_learning_rate = False, momentum = True,damping = 0.4)
+
     CS = plt.contour(w1z, w2z, C, camp=cm.coolwarm)
     plt.plot([a for a, b in gd_traj], [b for a,b in gd_traj], 'yo-', label="No Momentum")
     plt.plot([a for a, b in mo_traj], [b for a,b in mo_traj], 'go-', label="Momentum")
