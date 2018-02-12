@@ -690,9 +690,9 @@ code Kernel
         -- This method is called once at kernel startup time to initialize
         -- the one and only "ThreadManager" object.
         -- 
-          print ("Initializing Thread Manager...\n")
         var
           i: int
+          print ("Initializing Thread Manager...\n")
           threadTable = new array of Thread {MAX_NUMBER_OF_PROCESSES of new Thread}
           freeList = new List[Thread]
           threadManagerLock = new Mutex
