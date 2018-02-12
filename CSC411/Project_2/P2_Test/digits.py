@@ -416,9 +416,6 @@ def part6_grad_descent_2var(f, df, loss, x, y, init_t, w1,w2,w1_r,w1_c,w2_r,w2_c
     var_t[w1_r,w1_c] = w1
     var_t[w2_r,w2_c] = w2
 
-    print var_t[w1_r,w1_c],var_t[w2_r,w2_c]
-    print momentum
-
     prev_t = var_t-10*EPS
     t = var_t.copy()
     
@@ -474,7 +471,7 @@ def part6():
     #train the nn, only need to run once
     #part6_train(training_x, training_y,validation_x,validation_y, test_x, test_y)
     
-    np.random.seed(3)
+    np.random.seed(1)
     
     trained_Wb = np.load("data/trained_Wb.npy")
     
@@ -495,10 +492,10 @@ def part6():
         for j, w2 in enumerate(w2s):
             C[j,i] = part6_get_loss_2var(w1,w2,w1_r,w1_c,w2_r,w2_c,trained_Wb,training_x,training_y)
     
-    init_w1 = trained_Wb[w1_r][w1_c]-1.5
-    init_w2 = trained_Wb[w2_r][w2_c]+1.0
-    gd_traj = part6_grad_descent_2var(forward, backward, NLL, training_x, training_y.T, trained_Wb, init_w1,init_w2,w1_r,w1_c,w2_r,w2_c, alpha=0.0012,ada_learning_rate = False, momentum = False, damping = 0)
-    mo_traj = part6_grad_descent_2var(forward, backward, NLL, training_x, training_y.T, trained_Wb, init_w1,init_w2,w1_r,w1_c,w2_r,w2_c, alpha=0.0012,ada_learning_rate = False, momentum = True,damping = 0.4)
+    init_w1 = trained_Wb[w1_r][w1_c]+0.5
+    init_w2 = trained_Wb[w2_r][w2_c]-1.8
+    gd_traj = part6_grad_descent_2var(forward, backward, NLL, training_x, training_y.T, trained_Wb, init_w1,init_w2,w1_r,w1_c,w2_r,w2_c, alpha=0.0035,ada_learning_rate = False, momentum = False, damping = 0)
+    mo_traj = part6_grad_descent_2var(forward, backward, NLL, training_x, training_y.T, trained_Wb, init_w1,init_w2,w1_r,w1_c,w2_r,w2_c, alpha=0.0035,ada_learning_rate = False, momentum = True,damping = 0.4)
 
     CS = plt.contour(w1z, w2z, C, camp=cm.coolwarm)
     plt.plot([a for a, b in gd_traj], [b for a,b in gd_traj], 'yo-', label="No Momentum")
