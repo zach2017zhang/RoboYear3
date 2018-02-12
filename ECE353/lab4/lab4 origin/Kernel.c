@@ -704,6 +704,7 @@ code Kernel
               threadTable[i].status = UNUSED
               freeList.AddToEnd(&threadTable[i])
             endFor
+            self.Print ()
 
           -- NOT IMPLEMENTED
         endMethod
