@@ -867,7 +867,7 @@ code Kernel
           processManagerLock.Init()
           aProcessBecameFree.Init()
           aProcessDied.Init()
-          nextPid = 3
+          -- nextPid = 0
         endMethod
 
       ----------  ProcessManager . Print  ----------
@@ -1058,12 +1058,39 @@ code Kernel
 
       method GetNewFrames (aPageTable: ptr to AddrSpace, numFramesNeeded: int)
           -- NOT IMPLEMENTED
+        var 
+          i:int
+          frameAddr: int
+          frameManagerLock.Lock()
+          while numberFreeFrames < numFramesNeeded
+            newFramesAvailable.Wait (&frameManagerLock)
+          endWhile
+          for i = 0 to numFramesNeeded - 1
+            frameAddr = self.GetAFrame()
+            (*aPageTable).SetFrameAddr(i, frameAddr)
+          endFor
+          numberFreeFrames = numberFreeFrames - numFramesNeeded
+          (*aPageTable).numberOfPages = numFramesNeeded
+          frameManagerLock.Unlock()
         endMethod
 
       ----------  FrameManager . ReturnAllFrames  ----------
 
       method ReturnAllFrames (aPageTable: ptr to AddrSpace)
           -- NOT IMPLEMENTED
+        var 
+          i:int
+          bitNumber: int
+          frameAddr: int
+          frameManagerLock.Lock()
+          for i = 0 to (*aPageTable).numberOfPages - 1
+            frameAddr = (*aPageTable).ExtractFrameAddr(i)
+            bitNumber = (frameAddr - PHYSICAL_ADDRESS_OF_FIRST_PAGE_FRAME) / PAGE_SIZE
+            framesInUse.ClearBit(bitNumber)
+          endFor
+          numberFreeFrames = numberFreeFrames + aPageTable.numberOfPages
+          newFramesAvailable.Broadcast(&frameManagerLock)
+          frameManagerLock.Unlock()
         endMethod
 
     endBehavior
