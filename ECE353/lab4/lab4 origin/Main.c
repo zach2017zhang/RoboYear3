@@ -26,7 +26,7 @@ code Main
       -- Initialize the ThreadManager
       threadManager = new ThreadManager
       threadManager.Init ()
-
+      threadManager.Print()
       -- Initialize the FrameManager
       -- frameManager = new FrameManager
       -- frameManager.Init ()
