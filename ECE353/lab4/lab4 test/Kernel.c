@@ -867,6 +867,7 @@ code Kernel
           processManagerLock.Init()
           aProcessBecameFree.Init()
           aProcessDied.Init()
+          nextPid = 3
         endMethod
 
       ----------  ProcessManager . Print  ----------
