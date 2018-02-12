@@ -693,18 +693,18 @@ code Kernel
           print ("Initializing Thread Manager...\n")
         var
           i: int
-            threadTable = new array of Thread {MAX_NUMBER_OF_PROCESSES of new Thread}
-            freeList = new List[Thread]
-            threadManagerLock = new Mutex
-            aThreadBecameFree = new Condition
-            threadManagerLock.Init()
-            aThreadBecameFree.Init()
-            for i = 0 to MAX_NUMBER_OF_PROCESSES-1 by 1
-              threadTable[i].Init("ThreadName")
-              threadTable[i].status = UNUSED
-              freeList.AddToEnd(&threadTable[i])
-            endFor
-            self.Print ()
+          threadTable = new array of Thread {MAX_NUMBER_OF_PROCESSES of new Thread}
+          freeList = new List[Thread]
+          threadManagerLock = new Mutex
+          aThreadBecameFree = new Condition
+          threadManagerLock.Init()
+          aThreadBecameFree.Init()
+          for i = 0 to MAX_NUMBER_OF_PROCESSES-1 by 1
+            threadTable[i].Init("ThreadName")
+            threadTable[i].status = UNUSED
+            freeList.AddToEnd(&threadTable[i])
+          endFor
+          self.Print ()
 
           -- NOT IMPLEMENTED
         endMethod
