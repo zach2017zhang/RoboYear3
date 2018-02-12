@@ -205,7 +205,7 @@ def grad_descent(f, df, loss, x, y, init_t,ada_learning_rate = True, learning_cu
         #plot learning curve
         if learning_curve and iter % 5 == 0:
             num_iter.append(iter)
-            performance_training.append(performance(x, y.T, t,print_output = False))
+            performance_training.append(performance(x, y.T, t,print_output = True))
             performance_test.append(performance(tx, ty.T, t,print_output = False))
         
         #normal gradient descent
@@ -344,7 +344,7 @@ def part4():
         pass
     
     #Load the MNIST digit data
-    training_x, training_y,validation_x,validation_y, test_x, test_y = create_sets(v_size_per_digit=10)     
+    training_x, training_y,validation_x,validation_y, test_x, test_y = create_sets(v_size_per_digit=0)     
     #create weights    
     np.random.seed(0)
     Wb = np.random.normal(0.,0.01,[num_digits,input_size+1])
@@ -379,7 +379,7 @@ def part5():
         pass
     
     #Load the MNIST digit data
-    training_x, training_y,validation_x,validation_y, test_x, test_y = create_sets(v_size_per_digit=10)     
+    training_x, training_y,validation_x,validation_y, test_x, test_y = create_sets(v_size_per_digit=0)     
 
     np.random.seed(0)
     #create weights
@@ -510,8 +510,8 @@ if __name__ == "__main__":
     #part1()
     #part2()
     #part3()
-    #part4()
+    part4()
     #part5()
-    part6()
+    #part6()
     
     
