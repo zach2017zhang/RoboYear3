@@ -34,7 +34,7 @@ def load_mnist():
         M['test'+str(i)]=M['test'+str(i)]/255.
     return M
 
-def create_sets():
+def create_sets_without_validation():
     """
     generate input and desired output arrays
     """
@@ -53,6 +53,46 @@ def create_sets():
         temp_test_y[:,i]=1
         test_y = np.vstack((test_y,temp_test_y))
     return training_x, training_y, test_x, test_y
+
+def create_sets(v_size_per_digit=0):
+    """
+    generate input and desired output arrays
+    """
+    if not v_size_per_digit==0:
+        M = load_mnist()
+        
+        training_x = np.empty((0,input_size))
+        validation_x = np.empty((0,input_size))
+        test_x = np.empty((0,input_size))
+        
+        training_y = np.empty((0,num_digits))
+        validation_y = np.empty((0,num_digits))
+        test_y = np.empty((0,num_digits))
+    
+        for i in range(num_digits):
+            
+            full_x = M['train'+str(i)]
+            full_y = np.zeros((M['train'+str(i)].shape[0],num_digits))
+            full_y[:,i]=1
+            combined_xy = np.hstack((full_x,full_y))
+            np.random.shuffle(combined_xy)
+            
+            training_x = np.vstack((training_x,combined_xy[:-v_size_per_digit,:-num_digits]))
+            training_y = np.vstack((training_y,combined_xy[:-v_size_per_digit,-num_digits:]))
+            
+            validation_x = np.vstack((validation_x,combined_xy[-v_size_per_digit:,:-num_digits]))
+            validation_y = np.vstack((validation_y,combined_xy[-v_size_per_digit:,-num_digits:]))        
+            
+            test_x = np.vstack((test_x,M['test'+str(i)]))
+            temp_test_y = np.zeros((M['test'+str(i)].shape[0],num_digits))
+            temp_test_y[:,i]=1
+            test_y = np.vstack((test_y,temp_test_y))
+    else:
+        validation_x = np.empty((0,input_size))
+        validation_y = np.empty((0,num_digits))
+        training_x, training_y, test_x, test_y = create_sets_without_validation()
+        
+    return training_x, training_y, validation_x, validation_y, test_x, test_y
 
 def softmax_forward(y):
     '''
@@ -187,8 +227,8 @@ def grad_descent(f, df, loss, x, y, init_t,ada_learning_rate = True, learning_cu
         iter += 1
     
     if learning_curve:
-        plt.plot(num_iter, performance_training,'^-')
-        plt.plot(num_iter, performance_test,'^-')
+        plt.plot(num_iter, performance_training,'-')
+        plt.plot(num_iter, performance_test,'-')
         plt.legend(['training', 'test'])
         plt.xlabel('Number of Iterations')
         plt.ylabel('Performance')
@@ -233,6 +273,8 @@ def part2():
     Nothing much to do for this function.
     required funcitons are defined above.
     """
+    np.random.seed(0)
+    
     #create weights
     Wb = np.random.normal(0.,0.5,[num_digits,input_size+1])
     
@@ -243,14 +285,14 @@ def part2():
     # Calculate the output, L1 is the node values in the first layer
     output = forward(x, Wb)
     
-    print x.shape
+    print "The output example is:"
     print output
     
     return 0
 
 # Part 3
 # -----------------------------------------------------------------------------
-def part3_grad_check(training_x, training_y, test_x, test_y):
+def part3_grad_check(training_x, training_y):
     """
     To do: improve this function to perform gradient check and include in the report
     """
@@ -284,11 +326,12 @@ def part3():
     """
     Perform gradient check
     """
-    #Load the MNIST digit data
-    training_x, training_y, test_x, test_y = create_sets()
+    np.random.seed(1)
     
-    np.random.seed(0)
-    part3_grad_check(training_x, training_y, test_x, test_y)
+    #Load the MNIST digit data
+    training_x, training_y,validation_x,validation_y, test_x, test_y = create_sets(v_size_per_digit=0)
+    
+    part3_grad_check(training_x, training_y)
     
     return 0
  
@@ -301,7 +344,7 @@ def part4():
         pass
     
     #Load the MNIST digit data
-    training_x, training_y, test_x, test_y = create_sets()     
+    training_x, training_y,validation_x,validation_y, test_x, test_y = create_sets(v_size_per_digit=10)     
     #create weights    
     np.random.seed(0)
     Wb = np.random.normal(0.,0.01,[num_digits,input_size+1])
@@ -311,7 +354,7 @@ def part4():
     for i in range(trained_W.shape[0]):
         plt.figure(i+1)
         plt.imshow((trained_W[i,:]).reshape(28,28),interpolation='none', cmap=cm.coolwarm)
-        print "Digit "+str(i)+ "is: \n"
+        print "Digit "+str(i)+ " is: \n"
         plt.show()
         plt.imsave("figures/part4f"+str(i+2)+".jpg",(trained_W[i,:]).reshape(28,28), cmap=cm.coolwarm)
 
@@ -336,7 +379,7 @@ def part5():
         pass
     
     #Load the MNIST digit data
-    training_x, training_y, test_x, test_y = create_sets()     
+    training_x, training_y,validation_x,validation_y, test_x, test_y = create_sets(v_size_per_digit=10)     
 
     np.random.seed(0)
     #create weights
@@ -401,20 +444,34 @@ def part6_grad_descent_2var(f, df, loss, x, y, init_t, w1,w2,w1_r,w1_c,w2_r,w2_c
     
     return traj
 
+def part6_train(training_x, training_y,validation_x,validation_y, test_x, test_y):
+    #create weights
+    Wb = np.random.normal(0.,0.001,[num_digits,input_size+1])
+    trained_Wb = grad_descent(forward, backward, NLL, training_x, training_y.T, Wb,alpha=0.000001)
+    
+    np.save("data/trained_Wb",trained_Wb)
+
 def part6():
     try:
         os.makedirs("figures")
     except OSError:
         pass
-
-    #Load the MNIST digit data
-    training_x, training_y, test_x, test_y = create_sets()     
-
-    np.random.seed(1)
+    try:
+        os.makedirs("data")
+    except OSError:
+        pass
     
-    #create weights
-    Wb = np.random.normal(0.,0.001,[num_digits,input_size+1])
-    trained_Wb = grad_descent(forward, backward, NLL, training_x, training_y.T, Wb,alpha=0.000001)
+    np.random.seed(0)
+    
+    #Load the MNIST digit data
+    training_x, training_y,validation_x,validation_y, test_x, test_y = create_sets(v_size_per_digit=0)    
+    
+    #train the nn, only need to run once
+    #part6_train(training_x, training_y,validation_x,validation_y, test_x, test_y)
+    
+    np.random.seed(2)
+    
+    trained_Wb = np.load("data/trained_Wb.npy")
     
     #ramdomly choose W1 and W2 at the center of the image
     w1_c = 28*(input_dim/2  + int(round(6*np.random.rand())) - 3) + input_dim/2  + int(round(6*np.random.rand())) - 3
@@ -434,7 +491,7 @@ def part6():
     init_w1 = -1.6
     init_w2 = -1.6        
     gd_traj = part6_grad_descent_2var(forward, backward, NLL, training_x, training_y.T, trained_Wb, init_w1,init_w2,w1_r,w1_c,w2_r,w2_c, alpha=0.0025,ada_learning_rate = False, momentum = False)
-    mo_traj = part6_grad_descent_2var(forward, backward, NLL, training_x, training_y.T, trained_Wb, init_w1,init_w2,w1_r,w1_c,w2_r,w2_c, alpha=0.0025,ada_learning_rate = False,damping = 0.4)
+    mo_traj = part6_grad_descent_2var(forward, backward, NLL, training_x, training_y.T, trained_Wb, init_w1,init_w2,w1_r,w1_c,w2_r,w2_c, alpha=0.0025,ada_learning_rate = False, damping = 0.4)
     
     CS = plt.contour(w1z, w2z, C, camp=cm.coolwarm)
     plt.plot([a for a, b in gd_traj], [b for a,b in gd_traj], 'yo-', label="No Momentum")
@@ -452,4 +509,5 @@ if __name__ == "__main__":
     #part4()
     #part5()
     part6()
+    
     
