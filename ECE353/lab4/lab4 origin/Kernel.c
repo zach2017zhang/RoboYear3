@@ -691,20 +691,6 @@ code Kernel
         -- the one and only "ThreadManager" object.
         -- 
           print ("Initializing Thread Manager...\n")
-        var
-          i: int
-          threadTable = new array of Thread {MAX_NUMBER_OF_PROCESSES of new Thread}
-          freeList = new List[Thread]
-          threadManagerLock = new Mutex
-          aThreadBecameFree = new Condition
-          threadManagerLock.Init()
-          aThreadBecameFree.Init()
-          for i = 0 to MAX_NUMBER_OF_PROCESSES-1 by 1
-            threadTable[i].Init("ThreadName")
-            threadTable[i].status = UNUSED
-            freeList.AddToEnd(&threadTable[i])
-          endFor
-
           -- NOT IMPLEMENTED
         endMethod
 
@@ -739,16 +725,7 @@ code Kernel
         -- until one is available.
         -- 
           -- NOT IMPLEMENTED
-        var
-          NewThreadPtr: ptr to Thread
-        threadManagerLock.Lock()
-        while freeList.IsEmpty()
-          aThreadBecameFree.Wait(&threadManagerLock)
-        endWhile
-        NewThreadPtr = freeList.Remove()
-        (*NewThreadPtr).status = JUST_CREATED
-        threadManagerLock.Unlock()
-          return NewThreadPtr
+          return null
         endMethod
 
       ----------  ThreadManager . FreeThread  ----------
@@ -759,11 +736,6 @@ code Kernel
         -- to the FREE list.
         -- 
           -- NOT IMPLEMENTED
-          threadManagerLock.Lock()
-          (*th).status = UNUSED
-          freeList.AddToEnd(th)
-          aThreadBecameFree.Signal(&threadManagerLock)
-          threadManagerLock.Unlock()
         endMethod
 
     endBehavior

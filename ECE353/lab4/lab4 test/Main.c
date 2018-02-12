@@ -20,16 +20,16 @@ code Main
       InitializeScheduler ()
 
       -- Initialize the ProcessManager
-      processManager = new ProcessManager
-      processManager.Init ()
+      -- processManager = new ProcessManager
+      -- processManager.Init ()
 
       -- Initialize the ThreadManager
       threadManager = new ThreadManager
       threadManager.Init ()
-
+      threadManager.Print()
       -- Initialize the FrameManager
-      frameManager = new FrameManager
-      frameManager.Init ()
+      -- frameManager = new FrameManager
+      -- frameManager.Init ()
 
 -- THE FOLLOWING CODE MAY BE USEFUL DURING TESTING, SO YOU MAY WISH TO
 -- UNCOMMENT AND USE ALL OR PART OF IT.  HOWEVER, FOR YOUR FINAL RUN,
@@ -110,8 +110,8 @@ code Main
 
       -- Run more thorough tests.
       RunThreadManagerTests ()
-      RunProcessManagerTests ()
-      RunFrameManagerTests ()
+      -- RunProcessManagerTests ()
+      -- RunFrameManagerTests ()
 
       RuntimeExit ()
 
