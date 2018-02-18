@@ -1,11 +1,25 @@
+
+from pylab import *
+import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.cbook as cbook
+import time
+from copy import deepcopy
+from scipy.misc import imread
+from scipy.misc import imresize
+from scipy.misc import imsave
+import matplotlib.image as mpimg
+import os
+from scipy.ndimage import filters
+import urllib
+from torch.autograd import Variable
 import torch
+from scipy.io import loadmat
+from torch.utils.data import Dataset, DataLoader,TensorDataset
+import hashlib
+
 import torchvision.models as models
 import torchvision
-from torch.autograd import Variable
-
-import numpy as np
-import  matplotlib.pyplot as plt
-from scipy.misc import imread, imresize
 
 import torch.nn as nn
 
@@ -17,6 +31,7 @@ from caffe_classes import class_names
 #       net.features(...)
 # If you would like to use other layer features, you will need to
 # make similar modifications.
+
 class MyAlexNet(nn.Module):
     def load_weights(self):
         an_builtin = torchvision.models.alexnet(pretrained=True)
@@ -63,6 +78,7 @@ class MyAlexNet(nn.Module):
     def forward(self, x):
         x = self.features(x)
         x = x.view(x.size(0), 256 * 6 * 6)
+        print x.data.numpy().shape
         x = self.classifier(x)
         return x
 
@@ -70,22 +86,21 @@ class MyAlexNet(nn.Module):
 model = MyAlexNet()
 model.eval()
 
-# Read an image
-im = imread('kiwi227.jpeg')[:,:,:3]
+im = imread('cropped_images/baldwin0.jpg')[:,:,:3]
+im = imresize(im,(227,227))
 im = im - np.mean(im.flatten())
 im = im/np.max(np.abs(im.flatten()))
-im = np.rollaxis(im, -1).astype(np.float32) ## add np.
+im = np.rollaxis(im, -1).astype(np.float32)
 
-# turn the image into a numpy variable
 im_v = Variable(torch.from_numpy(im).unsqueeze_(0), requires_grad=False)    
-
-# run the forward pass AlexNet prediction
 softmax = torch.nn.Softmax()
+
 all_probs = softmax(model.forward(im_v)).data.numpy()[0]
 sorted_ans = np.argsort(all_probs)
 
 for i in range(-1, -6, -1):
     print("Answer:", class_names[sorted_ans[i]], ", Prob:", all_probs[sorted_ans[i]])
+
 
 ans = np.argmax(model.forward(im_v).data.numpy())
 prob_ans = softmax(model.forward(im_v)).data.numpy()[0][ans]

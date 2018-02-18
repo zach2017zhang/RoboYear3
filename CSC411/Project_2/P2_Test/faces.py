@@ -145,28 +145,28 @@ Return:
     feature: the feature matrix
     label: the label matrix
 """
-def create_set(classify_act, desired_set,dim=32):
+def create_set(classify_act, desired_set,foldername = "resized_images_32/",dim=32):
     feature = np.empty((dim*dim,0))
     label = np.empty((6,0))
     for a in classify_act.keys():
         for image in desired_set[a]:
             label = np.hstack((label,np.array(classify_act[a])))
             try:
-                im = imread("cropped_images/"+image+".jpg")
+                im = imread(foldername+image+".jpg")
             except IOError:
                 try:
-                    im = imread("cropped_images/"+image+".jpeg")
+                    im = imread(foldername+image+".jpeg")
                 except IOError:
                     try:
-                        im = imread("cropped_images/" + image + ".JPG")
+                        im = imread(foldername + image + ".JPG")
                     except IOError:
                         try:
-                            im = imread("cropped_images/" + image + ".PNG")
+                            im = imread(foldername + image + ".PNG")
                         except IOError:
                             try:
-                                im = imread("cropped_images/" + image + ".JPEG")
+                                im = imread(foldername + image + ".JPEG")
                             except IOError:
-                                im = imread("cropped_images/"+image+".png")
+                                im = imread(foldername+image+".png")
             try:
                 im = (im/255.).reshape(dim*dim,1)
             except:
@@ -203,7 +203,7 @@ def part8_1():
     except OSError:
         pass
     
-    full_image_num = get_imag_num(["facescrub_actors.txt","facescrub_actresses.txt"], "cropped_images")
+    full_image_num = get_imag_num(["facescrub_actors.txt","facescrub_actresses.txt"], "resized_images_32/")
     act =['Lorraine Bracco', 'Peri Gilpin', 'Angie Harmon', 'Alec Baldwin', 'Bill Hader', 'Steve Carell']
     
     act_num = {}
@@ -296,11 +296,17 @@ def part8_2(plot = True,dim = 32):
     
     #initialize weight
     model[0].weight.data.normal_(0.0,0.01)
+    model[2].weight.data.normal_(0.0,0.01)
+    model[0].bias.data.normal_(0.0,0.01)
+    model[2].bias.data.normal_(0.0,0.01)
     
     dataloader = DataLoader(train_xy, batch_size=batch_size,shuffle=True)
     
     loss_fn = torch.nn.CrossEntropyLoss()
-    learning_rate = 1e-4
+    learning_rate = 2e-4
+    momentum_set = 0.9
+    
+    #optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum_set)
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
     
     train_x = Variable(torch.from_numpy(train_xy[:,:-1]), requires_grad=False).type(dtype_float)
