@@ -71,7 +71,7 @@ model = MyAlexNet()
 model.eval()
 
 # Read an image
-im = imread('kiwi227.png')[:,:,:3]
+im = imread('kiwi227.jpeg')[:,:,:3]
 im = im - np.mean(im.flatten())
 im = im/np.max(np.abs(im.flatten()))
 im = np.rollaxis(im, -1).astype(np.float32) ## add np.
