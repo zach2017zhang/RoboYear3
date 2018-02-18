@@ -109,7 +109,7 @@ def create_set(classify_act, desired_set,model,foldername = "resized_images_227/
                 im = im/np.max(np.abs(im.flatten()))
                 im = np.rollaxis(im, -1).astype(np.float32)
                 im_v = Variable(torch.from_numpy(im).unsqueeze_(0), requires_grad=False)
-                im = model.forward(im_v)
+                im = model.get_feature(im_v)
             except:
                 print ("Cannot process image.")      
             feature = np.vstack((feature,im))
@@ -146,8 +146,14 @@ class MyAlexNet(nn.Module):
         for i in features_weight_i:
             self.features[i].weight = an_builtin.features[i].weight
             self.features[i].bias = an_builtin.features[i].bias
-            
+        
+        """
         classifier_weight_i = [0, 2]
+        for i in classifier_weight_i:
+            self.classifier[i].weight.data.normal_(0.0,0.01)
+            self.classifier[i].bias.data.normal_(0.0,0.01)
+        """
+        classifier_weight_i = [0]
         for i in classifier_weight_i:
             self.classifier[i].weight.data.normal_(0.0,0.01)
             self.classifier[i].bias.data.normal_(0.0,0.01)
@@ -169,24 +175,36 @@ class MyAlexNet(nn.Module):
             nn.ReLU(inplace=True),
             nn.MaxPool2d(kernel_size=3, stride=2),
         )
-        
+        """
         self.classifier = nn.Sequential(
             nn.Linear(256 * 6 * 6, 12),
             nn.Tanh(),
             nn.Linear(12, num_classes),
             nn.Softmax()
             )
+        """
+        self.classifier = nn.Sequential(
+            nn.Linear(256 * 6 * 6, num_classes),
+            nn.Softmax()
+            )
+        
         
         self.load_weights()
         
         for param in self.features.parameters():
             param.requires_grad = False
 
-    def forward(self, x):
+    def get_feature(self, x):
         x = self.features(x)
         x = x.view(x.size(0), 256 * 6 * 6)
         #x = self.classifier(x)
         return x.data.numpy()
+    
+    def forward(self,x):
+        x = self.features(x)
+        x = x.view(x.size(0), 256 * 6 * 6)
+        x = self.classifier(x)
+        return x
     
 def image_processing(model):
     try:
@@ -223,8 +241,32 @@ def image_processing(model):
     
     return train_xy,validation_xy,test_xy
 
+def output(model,image_name, foldername='resized_images_227/'):
+    
+    classify_act = {0:'Lorraine Bracco', 1:'Peri Gilpin', 2:'Angie Harmon', 3:'Alec Baldwin', 4:'Bill Hader', 5:'Steve Carell'}
+
+    im = imread(foldername+image_name)[:,:,:3]
+    im = imresize(im,(227,227))
+    im = im - np.mean(im.flatten())
+    im = im/np.max(np.abs(im.flatten()))
+    im = np.rollaxis(im, -1).astype(np.float32)
+    im_v = Variable(torch.from_numpy(im).unsqueeze_(0), requires_grad=False)    
+    
+    all_probs = model.forward(im_v).data.numpy()[0]
+    sorted_ans = np.argsort(all_probs)
+    
+    for i in range(-1, -4, -1):
+        print("Answer:", classify_act[sorted_ans[i]], ", Prob:", all_probs[sorted_ans[i]])
+
+
+    ans = np.argmax(model.forward(im_v).data.numpy())
+    prob_ans = model.forward(im_v).data.numpy()[0][ans]
+    print("Top Answer:", classify_act[ans], "P(ans) = ", prob_ans)
+
 
 def part10(plot = True,dim = 227):
+    
+    print "Running Part 10"
     
     torch.manual_seed(0)
     
@@ -290,10 +332,22 @@ def part10(plot = True,dim = 227):
     
     return model
 
+def part10_plus():
+    
+    print "Running Part 10 Plus"
+    
+    model = part10()
+    
+    image_names = ['baldwin0.jpg']
+    
+    for image_name in image_names:
+        output(model, image_name)
+
 
 if __name__ == "__main__":
     #Important Note: Please uncomment the following line when using an IDE!
     os.chdir(os.path.dirname(__file__))
     #model = part10()
+    #part10_plus()
     
 
