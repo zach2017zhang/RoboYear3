@@ -354,7 +354,7 @@ def part8_3():
     model = part8_2(False)
     
     for i in range(5):
-        print (str(i)+"'s node is:")
+        print ("Node " +str(i)+" looks like:")
         plt.imshow(model[0].weight.data.numpy()[i, :].reshape((32, 32)), cmap=plt.cm.coolwarm)
         plt.savefig('figures/part8f'+str(i+2)+'.jpg')
         plt.show()
