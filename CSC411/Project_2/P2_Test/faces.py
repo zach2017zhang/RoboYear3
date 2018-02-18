@@ -280,7 +280,7 @@ def part8_2(plot = True,dim = 32):
     dim_h = 12
     dim_out = 6
     
-    n_epoch = 3000
+    n_epoch = 4000
     batch_size = 32
     
     dtype_float = torch.FloatTensor
