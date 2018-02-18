@@ -73,7 +73,7 @@ def sha256_check(filename, block_size = 65536):
 
 # Part 8_1
 # -----------------------------------------------------------------------------
-def part_1_imdl(source_file_name,folder_name,folder_name2):
+def part_1_imdl(source_file_name,folder_name,folder_name2,dim = 32):
     
     try:
         os.makedirs(folder_name)
@@ -128,10 +128,10 @@ def part_1_imdl(source_file_name,folder_name,folder_name2):
                 crop = line.split("\t")[4].split(",")
                 if im.ndim == 3:
                     imc = im[int(crop[1]):int(crop[3]),int(crop[0]):int(crop[2]),:]
-                    result = rgb2gray(imresize(imc,(32,32)))
+                    result = rgb2gray(imresize(imc,(dim,dim)))
                 else:
                     imc = im[int(crop[1]):int(crop[3]),int(crop[0]):int(crop[2])]
-                    result = (imresize(imc,(32,32)))/255.
+                    result = (imresize(imc,(dim,dim)))/255.
                 #imsave("cropped_images/"+filename, result)
                 plt.imsave(folder_name2+filename, result,cmap = cm.gray)
                 

@@ -145,8 +145,8 @@ Return:
     feature: the feature matrix
     label: the label matrix
 """
-def create_set(classify_act, desired_set):
-    feature = np.empty((1024,0))
+def create_set(classify_act, desired_set,dim=32):
+    feature = np.empty((dim*dim,0))
     label = np.empty((6,0))
     for a in classify_act.keys():
         for image in desired_set[a]:
@@ -168,10 +168,10 @@ def create_set(classify_act, desired_set):
                             except IOError:
                                 im = imread("cropped_images/"+image+".png")
             try:
-                im = (im/255.).reshape(1024,1)
+                im = (im/255.).reshape(dim*dim,1)
             except:
                 try:
-                    im = (im[:,:,0]/255.).reshape(1024,1)
+                    im = (im[:,:,0]/255.).reshape(dim*dim,1)
                 except:
                     print ("Cannot reshape image.")
             feature = np.hstack((feature,im))
@@ -234,9 +234,11 @@ def part8_1():
 
 # Part 8_2
 # -----------------------------------------------------------------------------
-def part8_2_fullbatch(train_xy, validation_xy,test_xy):
+def part8_2_fullbatch(train_xy, validation_xy,test_xy,dim=32):
     
-    dim_x = 32*32
+    torch.manual_seed(0)
+    
+    dim_x = dim*dim
     dim_h = 20
     dim_out = 6
     
@@ -268,16 +270,18 @@ def part8_2_fullbatch(train_xy, validation_xy,test_xy):
     y_pred = model(x).data.numpy()
     print (np.mean(np.argmax(y_pred, 1) == test_xy[:,-1]))
     
-def part8_2(plot = True):
+def part8_2(plot = True,dim = 32):
+    
+    torch.manual_seed(0)
     
     train_xy, validation_xy,test_xy =part8_1()
     
-    dim_x = 32*32
-    dim_h = 20
+    dim_x = dim*dim
+    dim_h = 12
     dim_out = 6
     
-    n_epoch = 4000
-    batch_size = 128
+    n_epoch = 3000
+    batch_size = 32
     
     dtype_float = torch.FloatTensor
     dtype_long = torch.LongTensor
@@ -285,18 +289,13 @@ def part8_2(plot = True):
 
     model = torch.nn.Sequential(
             torch.nn.Linear(dim_x, dim_h),
-            torch.nn.ReLU(),
+            torch.nn.Tanh(),
             torch.nn.Linear(dim_h, dim_out),
             torch.nn.Softmax()
             )
-    """
-    model = torch.nn.Sequential(
-            torch.nn.Linear(dim_x, dim_out),
-            torch.nn.ReLU(),
-            torch.nn.Linear(dim_out, dim_out),
-            torch.nn.Softmax()
-            )
-    """
+    
+    #initialize weight
+    model[0].weight.data.normal_(0.0,0.01)
     
     dataloader = DataLoader(train_xy, batch_size=batch_size,shuffle=True)
     
@@ -346,16 +345,16 @@ def part8_2(plot = True):
     
     return model
     
-# Part 8_3
+# Part 9
 # -----------------------------------------------------------------------------
     
-def part8_3():
+def part9(dim = 32):
 
-    model = part8_2(False)
+    model = part8_2(True)
     
     for i in range(5):
         print ("Node " +str(i)+" looks like:")
-        plt.imshow(model[0].weight.data.numpy()[i, :].reshape((32, 32)), cmap=plt.cm.coolwarm)
+        plt.imshow(model[0].weight.data.numpy()[i, :].reshape((dim, dim)), cmap=plt.cm.coolwarm)
         plt.savefig('figures/part8f'+str(i+2)+'.jpg')
         plt.show()
     
@@ -366,8 +365,8 @@ if __name__ == "__main__":
     #Important Note: Please uncomment the following line when using an IDE!
     os.chdir(os.path.dirname(__file__))
     #train_xy,validation_xy,test_xy = part8_1()
-    #part8_2()
-    part8_3()
+    #model = part8_2()
+    part9()
 
 
 # Test Code
