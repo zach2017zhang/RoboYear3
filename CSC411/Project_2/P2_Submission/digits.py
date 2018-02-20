@@ -179,7 +179,7 @@ def performance(x, y,Wb, print_output = True,report = "test set"):
     return result/x.shape[0]
     
 def grad_descent(f, df, loss, x, y, init_t,ada_learning_rate = True, learning_curve=False, \
-                 tx=[], ty=[], figure = 'default',momentum = True, damping = 0.9, alpha=0.0001, max_iter=500, EPS = 1e-5):
+                 tx=[], ty=[], figure_name = 'default',momentum = True, damping = 0.9, alpha=0.0001, max_iter=500, EPS = 1e-5):
     """
     Input:
         ada_learning_rate: adaptive learning rate flag
@@ -227,12 +227,21 @@ def grad_descent(f, df, loss, x, y, init_t,ada_learning_rate = True, learning_cu
         iter += 1
     
     if learning_curve:
+
         plt.plot(num_iter, performance_training,'-')
         plt.plot(num_iter, performance_test,'-')
         plt.legend(['training', 'test'])
         plt.xlabel('Number of Iterations')
         plt.ylabel('Performance')
-        plt.savefig('figures/'+figure+'.jpg')
+        plt.savefig('figures/'+figure_name+'.jpg')
+        plt.show()
+
+        plt.plot(num_iter[5:], performance_training[5:],'-')
+        plt.plot(num_iter[5:], performance_test[5:],'-')
+        plt.legend(['training', 'test'])
+        plt.xlabel('Number of Iterations')
+        plt.ylabel('Performance')
+        plt.savefig('figures/'+figure_name+'_1.jpg')
         plt.show()
     
     return t
@@ -357,7 +366,7 @@ def part4():
     #create weights    
     np.random.seed(0)
     Wb = np.random.normal(0.,0.01,[num_digits,input_size+1])
-    trained_Wb = grad_descent(forward, backward, NLL, training_x, training_y.T, Wb,momentum = False,learning_curve=True, max_iter=500, alpha=0.0001,figure = "part4f1", tx=test_x, ty=test_y.T)
+    trained_Wb = grad_descent(forward, backward, NLL, training_x, training_y.T, Wb,momentum = False,learning_curve=True, max_iter=500, alpha=0.0001,figure_name = "part4f1", tx=test_x, ty=test_y.T)
     trained_W = trained_Wb[:,:-1]
 
     for i in range(trained_W.shape[0]):
@@ -396,7 +405,7 @@ def part5():
     np.random.seed(0)
     #create weights
     Wb = np.random.normal(0.,0.5,[num_digits,input_size+1])
-    trained_Wb = grad_descent(forward, backward, NLL, training_x, training_y.T, Wb,learning_curve=True,figure = "part4f2", tx=test_x, ty=test_y.T)
+    trained_Wb = grad_descent(forward, backward, NLL, training_x, training_y.T, Wb,learning_curve=True,figure_name = "part5f1", tx=test_x, ty=test_y.T)
     
     return 0
 
@@ -515,7 +524,7 @@ def part6():
     CS = plt.contour(w1z, w2z, C, camp=cm.coolwarm)
     plt.plot([a for a, b in gd_traj], [b for a,b in gd_traj], 'yo-', label="No Momentum")
     plt.plot([a for a, b in mo_traj], [b for a,b in mo_traj], 'go-', label="Momentum")
-    plt.legend(loc='top left')
+    plt.legend(loc='upper left')
     plt.title('Contour plot')
     plt.savefig('figures/part6f1.jpg')
     plt.show()
@@ -526,7 +535,7 @@ if __name__ == "__main__":
     #part2()
     #part3()
     #part4()
-    #part5()
-    #part6()
+    part5()
+    part6()
     
     
