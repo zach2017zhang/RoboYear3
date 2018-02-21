@@ -1,28 +1,203 @@
-code System
+code UserSystem
 
   -- This package contains:
+  --     Wrapper functions for the syscalls
   --     Useful functions (e.g., StrEqual, Min, ...)
-  --     Printing functions (e.g., printIntVar, ...)
+  --     Printing functions (printIntVar)
   --     Functions involved in HEAP allocation and freeing
   --     Misc. language support routines, including error handling
   --     Functions involved in THROW and CATCH processing
 
------------------------------  MemoryEqual  ---------------------------------
+-----------------------------  Sys_Exit  ---------------------------------
 
-  function MemoryEqual (s1, s2: ptr to char, len: int) returns bool
-    --
-    -- Return TRUE if the blocks of memory contain the same bytes.
-    --
-      var i: int
-      for i = 0 to len-1
-        if *s1 != *s2
-          return false
-        endIf
-        s1 = s1 + 1
-        s2 = s2 + 1
-      endFor
-      return true
-    endFunction
+    function Sys_Exit (returnStatus: int)
+      --
+      -- This function causes the current process and its thread to
+      -- terminate.  The "returnStatus" will be saved so that it can
+      -- be passed to a "Sys_Join" executed by the parent process.
+      -- This function never returns.
+      --
+        var ignore: int
+        ignore = DoSyscall (SYSCALL_EXIT, returnStatus, 0, 0, 0)
+      endFunction
+
+-----------------------------  Sys_Shutdown  ---------------------------------
+
+    function Sys_Shutdown ()
+      --
+      -- This function will cause an immediate shutdown of the kernel.  It
+      -- will not return.
+      --
+        var ignore: int
+        ignore = DoSyscall (SYSCALL_SHUTDOWN, 0, 0, 0, 0)
+      endFunction
+
+-----------------------------  Sys_Yield  ---------------------------------
+
+    function Sys_Yield ()
+      --
+      -- This function yields the CPU to another process on the ready list.
+      -- Once this process is scheduled again, this function will return.
+      -- From the caller's perspective, this routine is similar to a "nop".
+      --
+        var ignore: int
+        ignore = DoSyscall (SYSCALL_YIELD, 0, 0, 0, 0)
+      endFunction
+
+-----------------------------  Sys_Fork  ---------------------------------
+
+    function Sys_Fork () returns int
+      --
+      -- This function creates a new process which is a copy of the current
+      -- process.  The new process will have a copy of the virtual memory
+      -- space and all files open in the original process will also be open
+      -- in the new process.  Both processes will then return from this
+      -- function.  In the parent process, the pid of the child will be
+      -- returned; in the child, zero will be returned.
+      --
+        return DoSyscall (SYSCALL_FORK, 0, 0, 0, 0)
+      endFunction
+
+-----------------------------  Sys_Join  ---------------------------------
+
+    function Sys_Join (processID: int) returns int
+      --
+      -- This function causes the caller to wait until the process with
+      -- the given pid has terminated, by executing a call to "Sys_Exit".
+      -- The returnStatus passed by that process to "Sys_Exit" will be
+      -- returned from this function.  If the other process invokes
+      -- "Sys_Exit" first, this returnStatus will be saved until either
+      -- its parent executes a "Sys_Join" naming that process's pid or
+      -- until its parent terminates.
+      --
+        return DoSyscall (SYSCALL_JOIN, processID, 0, 0, 0)
+      endFunction
+
+-----------------------------  Sys_Exec  ---------------------------------
+
+    function Sys_Exec (filename: String) returns int
+      --
+      -- This function is passed the name of a file.  That file is assumed
+      -- to be an executable file.  It is read in to memory, overwriting the
+      -- entire address space of the current process.  Then the OS will
+      -- begin executing the new process.  Any open files in the current
+      -- process will remain open and unchanged in the new process.
+      -- Normally, this function will not return.  If there are problems,
+      -- this function will return -1.
+      --
+        return DoSyscall (SYSCALL_EXEC, filename asInteger, 0, 0, 0)
+      endFunction
+
+-----------------------------  Sys_Create  ---------------------------------
+
+    function Sys_Create (filename: String) returns int
+      --
+      -- This function creates a new file on the disk.  If all is okay,
+      -- it returns 0, otherwise it returns a non-zero error code.  This
+      -- function does not open the file; so the caller must use "Sys_Open"
+      -- before attempting any I/O.
+      --
+        return DoSyscall (SYSCALL_CREATE, filename asInteger, 0, 0, 0)
+      endFunction
+
+-----------------------------  Sys_Open  ---------------------------------
+
+    function Sys_Open (filename: String) returns int
+      --
+      -- This function opens a file.  The file must exist already exist.
+      -- If all is OK, this function returns a file descriptor, which is
+      -- a small, non-negative integer.  It errors occur, this function
+      -- returns -1.
+      --
+        return DoSyscall (SYSCALL_OPEN, filename asInteger, 0, 0, 0)
+      endFunction
+
+-----------------------------  Sys_Read  ---------------------------------
+
+    function Sys_Read (fileDesc: int, buffer: ptr to char, sizeInBytes: int) returns int
+      --
+      -- This function is passed the fileDescriptor of a file (which is
+      -- assumed to have been successfully opened), a pointer to an area of
+      -- memory, and a count of the number of bytes to transfer.  This
+      -- function reads that many bytes from the current position in the
+      -- file and places them in memory.  If there are not enough bytes
+      -- between the current position and the end of the file, then a lesser
+      -- number of bytes is transferred.  The current file position will be
+      -- advanced by the number of bytes transferred.
+      --
+      -- If the input is coming from the serial device (the terminal), this
+      -- function will wait for at least one character to be typed before
+      -- returning, and then will return as many characters as have been typed
+      -- and buffered since the previous call to this function.
+      --
+      -- This function will return the  number of characters moved.  If there
+      -- are errors, it will return -1.
+      --
+        return DoSyscall (SYSCALL_READ, fileDesc, buffer asInteger, sizeInBytes, 0)
+      endFunction
+
+-----------------------------  Sys_Write  ---------------------------------
+
+    function Sys_Write (fileDesc: int, buffer: ptr to char, sizeInBytes: int) returns int
+      --
+      -- This function is passed the fileDescriptor of a file (which is
+      -- assumed to have been successfully opened), a pointer to an area of
+      -- memory, and a count of the number of bytes to transfer.  This
+      -- function writes that many bytes from the memory to the current
+      -- position in the file.
+      --
+      -- If the end of the file is reached, the file's size will be increased.
+      --
+      -- The current file position will be advanced by the number of bytes
+      -- transferred, so that future writes will follow the data transferred in
+      -- this invocation.
+      --
+      -- The output may also be directed to the serial output, i.e., to the
+      -- terminal.
+      --
+      -- This function will return the  number of characters moved.  If there
+      -- are errors, it will return -1.
+      --
+        return DoSyscall (SYSCALL_WRITE, fileDesc, buffer asInteger, sizeInBytes, 0)
+      endFunction
+
+-----------------------------  Sys_Seek  ---------------------------------
+
+    function Sys_Seek (fileDesc: int, newCurrentPos: int) returns int
+      --
+      -- This function is passed the fileDescriptor of a file (which is
+      -- assumed to have been successfully opened), and a new current
+      -- position.  This function sets the current position in the file to
+      -- the given value and returns the new current position.
+      --
+      -- Setting the current position to zero causes the next read or write
+      -- to refer to the very first byte in the file.  If the file size is N
+      -- bytes, setting the position to N will cause the next write to append
+      -- data to the end of the file.
+      --
+      -- The current position is always between 0 and N, where N is the
+      -- file's size in bytes.
+      --
+      -- If -1 is supplied as the new current position, the current position
+      -- will be set to N (the file size in bytes) and N will be returned.
+      --
+      -- It is an error to supply a new current position that is less than
+      -- -1 or greater than N.  If so, -1 will be returned.
+      --
+        return DoSyscall (SYSCALL_SEEK, fileDesc, newCurrentPos, 0, 0)
+      endFunction
+
+-----------------------------  Sys_Close  ---------------------------------
+
+    function Sys_Close (fileDesc: int)
+      --
+      -- This function is passed the fileDescriptor of a file, which is
+      -- assumed to be open.  It closes the file, which includes writing
+      -- out any data buffered by the kernel.
+      --
+        var ignore: int
+        ignore = DoSyscall (SYSCALL_CLOSE, fileDesc, 0, 0, 0)
+      endFunction
 
 -----------------------------  StrEqual  ---------------------------------
 
@@ -97,9 +272,6 @@ code System
 -----------------------------  Min  ---------------------------------
 
   function Min (i, j: int) returns int
-      --
-      -- Return the smaller of the two arguments.
-      --
       if i<j
         return i
       else
@@ -110,9 +282,6 @@ code System
 -----------------------------  Max  ---------------------------------
 
   function Max (i, j: int) returns int
-      --
-      -- Return the larger of the two arguments.
-      --
       if i>j
         return i
       else
@@ -224,33 +393,21 @@ code System
       endWhile
     endFunction
 
------------------------------  PrintMemory  ---------------------------------
+-----------------------------  MemoryEqual  ---------------------------------
 
-  function PrintMemory (startingAddr, numBytes: int)
+  function MemoryEqual (s1, s2: ptr to char, len: int) returns bool
     --
-    -- This routine dumps memory.  It is passed the starting address and the
-    -- number of bytes to print.
+    -- Return TRUE if the blocks of memory contain the same bytes.
     --
       var i: int
-          charPtr: ptr to char
-      charPtr = ((startingAddr / 32) * 32) asPtrTo char
-      for i = 0 to numBytes + 31
-        -- Print a line every PAGE_SIZE=8K bytes
-        if (i % 8192 == 0)
-          print ("\n\n--------------------------------------------------------\n")
+      for i = 0 to len-1
+        if *s1 != *s2
+          return false
         endIf
-        if (i % 32 == 0)
-          nl ()
-          printHex (charPtr asInteger)
-          print (":  ")
-        endIf
-       -- if (i % 8 == 0)
-       --   print (" ")
-       -- endIf
-        printChar (*charPtr)
-        charPtr = charPtr + 1
+        s1 = s1 + 1
+        s2 = s2 + 1
       endFor
-      print ("\n\n--------------------------------------------------------\n")
+      return true
     endFunction
 
 ------------------------------------  THE HEAP  ---------------------------------
@@ -268,7 +425,7 @@ code System
   -- are allocated sequentially and any attempt to "free" memory is ignored.
   --
   const
-    HEAP_SIZE = 500000
+    HEAP_SIZE = 20000
   var
     memoryArea: array [HEAP_SIZE] of char
     nextCharToUse: int = 0
@@ -278,31 +435,10 @@ code System
 
   function KPLSystemInitialize ()
     --
-    -- This routine is called directly before the "main" function is called.
-    --
-    -- Initialize the array count without initializing the data.  Here we initialize
-    -- a few of the bytes in the HEAP so that we can watch out for overflowing
-    -- into the frame region.
-    --
-    -- Also initialize the "FatalError" variable, which is a function that
-    -- is called whenever the program wishes to quit.
+    -- Initialize the array count without initializing the data.
     --
     var p: ptr to int = (& memoryArea) asPtrTo int
-        p2: ptr to int
-      FatalError = FatalError_SimpleVersion
       *p = HEAP_SIZE
-      for p2 = p+4 to p + 4 + HEAP_SIZE-1 by 100
-        *p2 = 0x48454150      -- ASCII codes for "HEAP"
-      endFor
-    endFunction
-
------------------------------  FatalError1  ---------------------------------
-
-  function FatalError_SimpleVersion (errorMessage: ptr to array of char)
-      print ("\nFATAL ERROR: \"")
-      print (errorMessage)
-      print ("\" -- TERMINATING!\n")
-      RuntimeExit ()
     endFunction
 
 -----------------------------  KPLMemoryAlloc  ---------------------------------
@@ -385,17 +521,17 @@ code System
 
 -----------------------------  KPLSystemError  ---------------------------------
 
-  function KPLSystemError (message: ptr to array of char)
+  function KPLSystemError (message: String)
     --
     -- Come here when a fatal error occurs.  Print a message and terminate
     -- the KPL program.  There will be no return from this function.
     -- NOTE: This function is not aware of threads; it is better to use FatalError
     -- (from the Thread package) if possible.
     --
-      print ("\n\nFATAL KPL RUNTIME ERROR: ")
+      print ("\n\nFATAL KPL RUNTIME ERROR IN USER PROGRAM: ")
       print (message)
       nl ()
-      RuntimeExit ()
+      TerminateWithError ()
     endFunction
 
 ------------------------  Internal Runtime Data Structures  ------------------------

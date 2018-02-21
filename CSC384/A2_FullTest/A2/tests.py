@@ -147,11 +147,11 @@ TEST_HEURISTICS  = True
 TEST_PROPAGATORS = True
 
 class TestStringMethods(unittest.TestCase):
-    def helper_prop(self, board, prop=prop_FC, var_ord=ord_mrv):
+    def helper_prop(self, board, prop=prop_FC, var_ord=ord_mrv, val_ord = val_lcv):
         csp, var_array = kenken_csp_model(board)
         solver = BT(csp)
         solver.quiet()
-        solver.bt_search(prop, var_ord)
+        solver.bt_search(prop, var_ord,val_ord)
         self.assertTrue(check_cages(var_array, board), "Incorect value in a cage!")
         self.assertTrue(check_diff(var_array, board), "Repeated value in a row or column!")
 

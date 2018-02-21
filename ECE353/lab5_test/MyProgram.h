@@ -1,7 +1,7 @@
-header Main
-
-  uses Kernel
+header MyProgram
  
+  uses UserSystem
+
   functions
     main ()
 
