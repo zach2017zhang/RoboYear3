@@ -57,6 +57,7 @@ unassigned variable left
 3. For GAC we initialize the GAC queue with all constraints containing V.
 
 '''
+from copy import deepcopy
 
 def prop_BT(csp, newVar=None):
     '''
@@ -124,7 +125,7 @@ def prop_GAC(csp, newVar=None):
             if v.is_assigned():
                 continue
             else:
-                current_domain = v.cur_domain().copy()
+                current_domain = deepcopy(v.cur_domain())
                 for d in current_domain:
                     if not c.has_support(v,d):
                         v.prune_value(d)

@@ -56,7 +56,7 @@ def val_lcv(csp, var):
                 if v.is_assigned():
                     continue
                 else:
-                    current_domain = v.cur_domain().copy()
+                    current_domain = deepcopy(v.cur_domain())
                     for d in current_domain:
                         if not c.has_support(v,d):
                             v.prune_value(d)
