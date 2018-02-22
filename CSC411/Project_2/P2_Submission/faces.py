@@ -275,7 +275,7 @@ if __name__ == "__main__":
     #Important Note: Please uncomment the following line when using an IDE!
     os.chdir(os.path.dirname(__file__))
     #train_xy,validation_xy,test_xy = part8_1()
-    #model = part8_2()
+    model = part8_2()
     #part9()
 
 
