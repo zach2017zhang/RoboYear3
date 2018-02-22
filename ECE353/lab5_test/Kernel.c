@@ -1849,9 +1849,6 @@ code Kernel
         ret:int
         kernalBufferCopy: array [MAX_STRING_SIZE] of char
       ret = (*currentThread).myProcess.addrSpace.GetStringFromVirtual(&kernalBufferCopy, buffer asInteger, MAX_STRING_SIZE)
-      if ret < 0
-        return -1
-      endIf
       print("Handle_Sys_Read invoked!")
       nl()
       print("fileDesc = ")
@@ -1874,9 +1871,6 @@ code Kernel
         ret:int
         kernalBufferCopy: array [MAX_STRING_SIZE] of char
       ret = (*currentThread).myProcess.addrSpace.GetStringFromVirtual(&kernalBufferCopy, buffer asInteger, MAX_STRING_SIZE)
-      if ret < 0
-        return -1
-      endIf
       print("Handle_Sys_Write invoked!")
       nl()
       print("fileDesc = ")
