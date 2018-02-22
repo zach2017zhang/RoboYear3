@@ -1718,7 +1718,7 @@ code Kernel
       -- NOT IMPLEMENTED
       print("Handle_Sys_Exit invoked!")
       nl()
-      print("returnState = ")
+      print("returnStatus = ")
       printInt(returnStatus)
       nl()
     endFunction
@@ -1727,7 +1727,7 @@ code Kernel
 
   function Handle_Sys_Shutdown ()
       -- NOT IMPLEMENTED
-      FatalError("FATAL ERROR in UserProgram: \"Syscall 'Shutdown' was invoked by a user thread\" -- TERMINATING!")
+      FatalError("FATAL ERROR in UserProgram: \"Syscall 'Shutdown' was invoked by a user thread\"")
     endFunction
 
 -----------------------------  Handle_Sys_Yield  ---------------------------------
@@ -1753,7 +1753,7 @@ code Kernel
       -- NOT IMPLEMENTED
       print("Handle_Sys_Join invoked!")
       nl()
-      print("Process id = ")
+      print("processID = ")
       printInt(processID)
       nl()
       return 2000
@@ -1810,10 +1810,10 @@ code Kernel
       endIf
       print("Handle_Sys_Create invoked!")
       nl()
-      print("Virtual address of filename = ")
+      print("virtual addr of filename = ")
       printHex(filename asInteger)
       nl()
-      print("Filename = ")
+      print("filename = ")
       print(&kernalFileName)
       nl()
       return 4000
@@ -1832,10 +1832,10 @@ code Kernel
       endIf
       print("Handle_Sys_Open invoked!")
       nl()
-      print("Virtual address of filename = ")
+      print("virtual addr of filename = ")
       printHex(filename asInteger)
       nl()
-      print("Filename = ")
+      print("filename = ")
       print(&kernalFileName)
       nl()
       return 5000
@@ -1857,10 +1857,10 @@ code Kernel
       print("fileDesc = ")
       printInt(fileDesc)
       nl()
-      print("Virtual address of buffer = ")
+      print("virtual addr of buffer = ")
       printHex(buffer asInteger)
       nl()
-      print("Size in bytes = ")
+      print("sizeInBytes = ")
       printInt(sizeInBytes)
       nl()
       return 6000
@@ -1882,10 +1882,10 @@ code Kernel
       print("fileDesc = ")
       printInt(fileDesc)
       nl()
-      print("Virtual address of buffer = ")
+      print("virtual addr of buffer = ")
       printHex(buffer asInteger)
       nl()
-      print("Size in bytes = ")
+      print("sizeInBytes = ")
       printInt(sizeInBytes)
       nl()
       return 7000
@@ -1900,7 +1900,7 @@ code Kernel
       print("fileDesc = ")
       printInt(fileDesc)
       nl()
-      print("New current pos = ")
+      print("newCurrentPos = ")
       printInt(newCurrentPos)
       nl()
       return 8000
