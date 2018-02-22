@@ -15,10 +15,11 @@ code Kernel
     var
       pcbPtr: ptr to ProcessControlBlock
       openFilePtr: ptr to OpenFile
+      entryPoint: int
       initUserStackTop: int
       initSystemStackTop: int
       junk: int
-    pcbPtr = ProcessManager.GetANewProcess()
+    pcbPtr = processManager.GetANewProcess()
     pcbPtr.myThread = currentThread
     currentThread.myProcess = pcbPtr
     openFilePtr = fileManager.Open("TestProgram1")
