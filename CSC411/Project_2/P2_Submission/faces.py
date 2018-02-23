@@ -653,10 +653,10 @@ def part8_3(plot = True,dim = 64):
             )
     
     #initialize weight
-    model[0].weight.data.normal_(0.0,0.01)
-    model[2].weight.data.normal_(0.0,0.01)
-    model[0].bias.data.normal_(0.0,0.01)
-    model[2].bias.data.normal_(0.0,0.01)
+    model[0].weight.data.normal_(0.0,0.1)
+    model[2].weight.data.normal_(0.0,0.1)
+    model[0].bias.data.normal_(0.0,0.1)
+    model[2].bias.data.normal_(0.0,0.1)
     
     dataloader = DataLoader(train_xy, batch_size=batch_size,shuffle=True)
     
