@@ -157,9 +157,9 @@ def part8_1(dimension = 32):
     classify_act = {'Lorraine Bracco':[[1],[0],[0],[0],[0],[0]], 'Peri Gilpin':[[0],[1],[0],[0],[0],[0]], 'Angie Harmon':[[0],[0],[1],[0],[0],[0]], 'Alec Baldwin':[[0],[0],[0],[1],[0],[0]], 'Bill Hader':[[0],[0],[0],[0],[1],[0]], 'Steve Carell':[[0],[0],[0],[0],[0],[1]]}
     #anti_classify_act = {0:'Lorraine Bracco', 1:'Peri Gilpin', 2:'Angie Harmon', 3:'Alec Baldwin', 4:'Bill Hader', 5:'Steve Carell'}
     
-    train_x,train_y = create_set(classify_act, training_set,dim=dimension)
-    test_x,test_y = create_set(classify_act, test_set,dim=dimension)
-    validation_x,validation_y = create_set(classify_act, validation_set,dim=dimension)
+    train_x,train_y = create_set(classify_act, training_set,foldername = "resized_images_"+str(dimension)+"/",dim=dimension)
+    test_x,test_y = create_set(classify_act, test_set,foldername = "resized_images_"+str(dimension)+"/",dim=dimension)
+    validation_x,validation_y = create_set(classify_act, validation_set,foldername = "resized_images_"+str(dimension)+"/",dim=dimension)
     
     
     train_xy = np.hstack((train_x,np.argmax(train_y, 1).reshape((train_x.shape[0],1))))
@@ -350,7 +350,7 @@ def part8_DIM():
     #dim_x = 32*32
     dim_h = 12
     dim_out = 6
-    n_epoch = 4000
+    n_epoch = 2000
     
     dtype_float = torch.FloatTensor
     dtype_long = torch.LongTensor
