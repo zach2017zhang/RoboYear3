@@ -463,6 +463,58 @@ def part4():
 
 # Part 5
 # -----------------------------------------------------------------------------
+def part5_grad_descent(f, df, loss, x, y, init_t,ada_learning_rate = True, learning_curve=False, \
+                 tx=[], ty=[], figure_name = 'default',momentum = True, damping = 0.9, alpha=0.0001, max_iter=1000, EPS = 1e-5, zoom_in = 25):
+    """
+    Input:
+        ada_learning_rate: adaptive learning rate flag
+        momentum: momentum flag
+        damping: momentum danping ratio
+    Output:
+    """
+    v = np.zeros((init_t.shape[0],init_t.shape[1])) #used for momentum
+    
+    prev_t = init_t-10*EPS
+    t = init_t.copy()
+    
+    currloss = loss(y, f(x,t)) # used for adaptive alpha
+    curr_alpha = alpha # used for adaptive alpha
+    
+    iter  = 0
+    num_iter = []
+    performance_training = []
+    performance_test = []
+    loss_function_value = []
+    
+    while norm(t - prev_t) >  EPS and iter < max_iter:
+        
+        #plot learning curve
+        if learning_curve and iter % 5 == 0:
+            num_iter.append(iter)
+            performance_training.append(performance(x, y.T, t,print_output = True))
+            performance_test.append(performance(tx, ty.T, t,print_output = False))
+            loss_function_value.append(currloss)
+        
+        #normal gradient descent
+        prev_t = t.copy()
+        if momentum:
+            v = damping*v+curr_alpha*df(y, f(x,t), x)
+            t -= v
+        else:
+            t -= curr_alpha*df(y, f(x,t), x)
+        
+        if iter % 5 == 0:
+            print "Iter", iter
+            if currloss < loss(y, f(x,t)) and ada_learning_rate:
+                curr_alpha = curr_alpha/2
+            currloss = loss(y, f(x,t))
+            print currloss
+            #print "Gradient: ", df(x, y, t), "\n"
+        
+        iter += 1
+    
+    return num_iter, performance_training, loss_function_value
+
 def part5():
     
     print "Running Part 5"
@@ -474,11 +526,41 @@ def part5():
     
     #Load the MNIST digit data
     training_x, training_y,validation_x,validation_y, test_x, test_y = create_sets(v_size_per_digit=0)     
-
+    
+    """
     np.random.seed(0)
     #create weights
     Wb = np.random.normal(0.,0.5,[num_digits,input_size+1])
     trained_Wb = grad_descent(forward, backward, NLL, training_x, training_y.T, Wb,learning_curve=True,figure_name = "part5f1", tx=test_x, ty=test_y.T)
+    """
+    
+    print "Compare part 4 and 5 (training set)"
+    
+    np.random.seed(0)
+    #create weights
+    Wb = np.random.normal(0.,0.5,[num_digits,input_size+1])
+    num_iter, performance_training_w, loss_function_value_w = part5_grad_descent(forward, backward, NLL, training_x, training_y.T, Wb,learning_curve=True, alpha = 0.00001,max_iter=200, tx=test_x, ty=test_y.T)
+    
+    np.random.seed(0)
+    #create weights
+    Wb = np.random.normal(0.,0.5,[num_digits,input_size+1])
+    num_iter, performance_training_wo, loss_function_value_wo = part5_grad_descent(forward, backward, NLL, training_x, training_y.T, Wb,momentum = False,learning_curve=True, max_iter=200, alpha=0.00001, tx=test_x, ty=test_y.T)
+
+    plt.plot(num_iter, performance_training_w,'-')
+    plt.plot(num_iter, performance_training_wo,'-')
+    plt.legend(['Momentum', 'Without Momentum'])
+    plt.xlabel('Number of Iterations')
+    plt.ylabel('Performance')
+    plt.savefig('figures/part5f2.jpg')
+    plt.show()
+    
+    plt.plot(num_iter, loss_function_value_w,'-')
+    plt.plot(num_iter, loss_function_value_wo,'-')
+    plt.legend(['Momentum', 'Without Momentum'])
+    plt.xlabel('Number of Iterations')
+    plt.ylabel('Loss Function Value')
+    plt.savefig('figures/part5f3.jpg')
+    plt.show()
     
     return 0
 
@@ -607,8 +689,8 @@ if __name__ == "__main__":
     #part1()
     #part2()
     #part3()
-    part4()
-    #part5()
+    #part4()
+    part5()
     #part6()
     
     
