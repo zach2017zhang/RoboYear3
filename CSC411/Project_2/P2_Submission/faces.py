@@ -506,7 +506,7 @@ def part8_W():
     train_xy, validation_xy,test_xy =part8_1(dimension = 64)
     train_x = Variable(torch.from_numpy(train_xy[:,:-1]), requires_grad=False).type(dtype_float)
     
-    for var in [0.0001, 0.001, 0.01, 0.1]:
+    for var in [0.001, 0.01, 0.1, 1]:
 
         dataloader = DataLoader(train_xy, batch_size=batch_size,shuffle=True)
 
@@ -734,9 +734,9 @@ if __name__ == "__main__":
     #part8_NHN()
     #part8_DIM()
     #part8_MB()
-    #part8_W()
+    part8_W()
     #part8_LR()
-    part8_3()
+    #part8_3()
     #part9()
 
 
