@@ -527,12 +527,12 @@ def part5():
     #Load the MNIST digit data
     training_x, training_y,validation_x,validation_y, test_x, test_y = create_sets(v_size_per_digit=0)     
     
-    """
+
     np.random.seed(0)
     #create weights
     Wb = np.random.normal(0.,0.5,[num_digits,input_size+1])
     trained_Wb = grad_descent(forward, backward, NLL, training_x, training_y.T, Wb,learning_curve=True,figure_name = "part5f1", tx=test_x, ty=test_y.T)
-    """
+
     
     print "Compare part 4 and 5 (training set)"
     

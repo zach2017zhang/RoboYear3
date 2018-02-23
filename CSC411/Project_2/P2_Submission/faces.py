@@ -131,7 +131,7 @@ def get_imag_num(source_file_names, foldername):
 
 # Part 8_1
 # -----------------------------------------------------------------------------
-def part8_1():
+def part8_1(dimension = 32):
     
     print "Running Part 8 1"
     
@@ -157,9 +157,9 @@ def part8_1():
     classify_act = {'Lorraine Bracco':[[1],[0],[0],[0],[0],[0]], 'Peri Gilpin':[[0],[1],[0],[0],[0],[0]], 'Angie Harmon':[[0],[0],[1],[0],[0],[0]], 'Alec Baldwin':[[0],[0],[0],[1],[0],[0]], 'Bill Hader':[[0],[0],[0],[0],[1],[0]], 'Steve Carell':[[0],[0],[0],[0],[0],[1]]}
     #anti_classify_act = {0:'Lorraine Bracco', 1:'Peri Gilpin', 2:'Angie Harmon', 3:'Alec Baldwin', 4:'Bill Hader', 5:'Steve Carell'}
     
-    train_x,train_y = create_set(classify_act, training_set)
-    test_x,test_y = create_set(classify_act, test_set)
-    validation_x,validation_y = create_set(classify_act, validation_set)
+    train_x,train_y = create_set(classify_act, training_set,dim=dimension)
+    test_x,test_y = create_set(classify_act, test_set,dim=dimension)
+    validation_x,validation_y = create_set(classify_act, validation_set,dim=dimension)
     
     
     train_xy = np.hstack((train_x,np.argmax(train_y, 1).reshape((train_x.shape[0],1))))
@@ -171,9 +171,252 @@ def part8_1():
 
 # Part 8_2
 # -----------------------------------------------------------------------------
-def part8_2(plot = True,dim = 32):
+def part8_CAL():
+    print "Running Part 8 3"
+    print "Choose Activation Layer"
     
-    print "Running Part 8 2"
+    train_xy, validation_xy,test_xy =part8_1()
+
+    dim_x = 32*32
+    dim_h = 12
+    dim_out = 6
+    n_epoch = 6000
+    batch_size = train_xy.shape[0]
+    dtype_float = torch.FloatTensor
+    dtype_long = torch.LongTensor
+
+
+    dataloader = DataLoader(train_xy, batch_size=batch_size,shuffle=True)
+    
+    loss_fn = torch.nn.CrossEntropyLoss()
+    learning_rate = 2e-4
+    momentum_set = 0.9
+    
+    train_x = Variable(torch.from_numpy(train_xy[:,:-1]), requires_grad=False).type(dtype_float)
+    performance_train_1 = []
+    performance_train_2 = []
+    num_iter = []
+
+    model = torch.nn.Sequential(
+            torch.nn.Linear(dim_x, dim_h),
+            torch.nn.Tanh(),
+            torch.nn.Linear(dim_h, dim_out),
+            torch.nn.Softmax()
+            )
+
+    #optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum_set)
+    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+    
+    torch.manual_seed(0)
+    #initialize weight
+    model[0].weight.data.normal_(0.0,0.01)
+    model[2].weight.data.normal_(0.0,0.01)
+    model[0].bias.data.normal_(0.0,0.01)
+    model[2].bias.data.normal_(0.0,0.01)
+    
+    for epoch in range(n_epoch):
+        for i, data in enumerate(dataloader):
+            x = Variable(data[:,:-1], requires_grad=False).type(dtype_float)
+            y_classes = Variable(data[:,-1], requires_grad=False).type(dtype_long)
+            
+            y_pred = model(x)
+            loss = loss_fn(y_pred, y_classes)
+        
+            model.zero_grad()  # Zero out the previous gradient computation
+            loss.backward()    # Compute the gradient
+            optimizer.step()   # Use the gradient information to
+            
+            if (epoch*ceil(train_xy.shape[0]/batch_size)+i) % 200 ==0:
+                num_iter.append(epoch*ceil(train_xy.shape[0]/batch_size)+i)
+                y_pred_train_x = model(train_x).data.numpy()
+                performance_train_1.append((np.mean(np.argmax(y_pred_train_x, 1) == train_xy[:,-1])))
+
+    model = torch.nn.Sequential(
+            torch.nn.Linear(dim_x, dim_h),
+            torch.nn.ReLU(),
+            torch.nn.Linear(dim_h, dim_out),
+            torch.nn.Softmax()
+            )
+
+    #optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum_set)
+    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+    torch.manual_seed(0)
+    #initialize weight
+    model[0].weight.data.normal_(0.0,0.01)
+    model[2].weight.data.normal_(0.0,0.01)
+    model[0].bias.data.normal_(0.0,0.01)
+    model[2].bias.data.normal_(0.0,0.01)
+    
+    for epoch in range(n_epoch):
+        for i, data in enumerate(dataloader):
+            x = Variable(data[:,:-1], requires_grad=False).type(dtype_float)
+            y_classes = Variable(data[:,-1], requires_grad=False).type(dtype_long)
+            
+            y_pred = model(x)
+            loss = loss_fn(y_pred, y_classes)
+        
+            model.zero_grad()  # Zero out the previous gradient computation
+            loss.backward()    # Compute the gradient
+            optimizer.step()   # Use the gradient information to
+        
+            if (epoch*ceil(train_xy.shape[0]/batch_size)+i) % 200 ==0:
+                y_pred_train_x = model(train_x).data.numpy()
+                performance_train_2.append((np.mean(np.argmax(y_pred_train_x, 1) == train_xy[:,-1])))
+    print num_iter    
+    plt.plot(num_iter, performance_train_1,'-',num_iter, performance_train_2,'-')
+    plt.legend(['training_1','training_2'])
+    plt.xlabel('Number of Iterations')
+    plt.ylabel('Performance')
+    plt.savefig('figures/part8fcal.jpg')
+    plt.show()
+
+# Part 8_2
+# -----------------------------------------------------------------------------
+def part8_NHN():
+    print "Running Part 8 3"
+    print "Choose Hidden Layer "
+    
+    train_xy, validation_xy,test_xy =part8_1()
+
+    dim_x = 32*32
+    #dim_h = 12
+    dim_out = 6
+    n_epoch = 4000
+    batch_size = train_xy.shape[0]
+    dtype_float = torch.FloatTensor
+    dtype_long = torch.LongTensor
+
+
+    dataloader = DataLoader(train_xy, batch_size=batch_size,shuffle=True)
+    
+    loss_fn = torch.nn.CrossEntropyLoss()
+    learning_rate = 2e-4
+    momentum_set = 0.9
+    
+    train_x = Variable(torch.from_numpy(train_xy[:,:-1]), requires_grad=False).type(dtype_float)
+    
+    legend = []
+    
+    for dim_h in [6, 12, 24]:
+        num_iter = []
+        performance_train = []
+        model = torch.nn.Sequential(
+                torch.nn.Linear(dim_x, dim_h),
+                torch.nn.Tanh(),
+                torch.nn.Linear(dim_h, dim_out),
+                torch.nn.Softmax()
+                )
+    
+        #optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum_set)
+        optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+        
+        torch.manual_seed(0)
+        #initialize weight
+        model[0].weight.data.normal_(0.0,0.01)
+        model[2].weight.data.normal_(0.0,0.01)
+        model[0].bias.data.normal_(0.0,0.01)
+        model[2].bias.data.normal_(0.0,0.01)
+        
+        for epoch in range(n_epoch):
+            for i, data in enumerate(dataloader):
+                x = Variable(data[:,:-1], requires_grad=False).type(dtype_float)
+                y_classes = Variable(data[:,-1], requires_grad=False).type(dtype_long)
+                
+                y_pred = model(x)
+                loss = loss_fn(y_pred, y_classes)
+            
+                model.zero_grad()  # Zero out the previous gradient computation
+                loss.backward()    # Compute the gradient
+                optimizer.step()   # Use the gradient information to
+                
+                if (epoch*ceil(train_xy.shape[0]/batch_size)+i) % 20 ==0:
+                    num_iter.append(epoch*ceil(train_xy.shape[0]/batch_size)+i)
+                    y_pred_train_x = model(train_x).data.numpy()
+                    performance_train.append((np.mean(np.argmax(y_pred_train_x, 1) == train_xy[:,-1])))
+        legend.append("# of Hidden Neuron = "+ str(dim_h))
+        plt.plot(num_iter, performance_train,'-')
+    plt.legend(legend)
+    plt.xlabel('Number of Iterations')
+    plt.ylabel('Performance')
+    plt.savefig('figures/part8fnhn.jpg')
+    plt.show()
+
+# Part 8_2
+# -----------------------------------------------------------------------------
+def part8_DIM():
+    print "Running Part 8 3"
+    print "Change Input Dimension "
+    
+    #dim_x = 32*32
+    dim_h = 12
+    dim_out = 6
+    n_epoch = 4000
+    
+    dtype_float = torch.FloatTensor
+    dtype_long = torch.LongTensor
+
+    loss_fn = torch.nn.CrossEntropyLoss()
+    learning_rate = 2e-4
+    momentum_set = 0.9
+    
+    legend = []
+    
+    for dim in [32, 64]:
+        dim_x = dim*dim
+        
+        train_xy, validation_xy,test_xy =part8_1(dimension = dim)
+        batch_size = train_xy.shape[0]
+        dataloader = DataLoader(train_xy, batch_size=batch_size,shuffle=True)
+        train_x = Variable(torch.from_numpy(train_xy[:,:-1]), requires_grad=False).type(dtype_float)
+        
+        num_iter = []
+        performance_train = []
+        model = torch.nn.Sequential(
+                torch.nn.Linear(dim_x, dim_h),
+                torch.nn.Tanh(),
+                torch.nn.Linear(dim_h, dim_out),
+                torch.nn.Softmax()
+                )
+    
+        #optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum_set)
+        optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+        
+        torch.manual_seed(0)
+        #initialize weight
+        model[0].weight.data.normal_(0.0,0.01)
+        model[2].weight.data.normal_(0.0,0.01)
+        model[0].bias.data.normal_(0.0,0.01)
+        model[2].bias.data.normal_(0.0,0.01)
+        
+        for epoch in range(n_epoch):
+            for i, data in enumerate(dataloader):
+                x = Variable(data[:,:-1], requires_grad=False).type(dtype_float)
+                y_classes = Variable(data[:,-1], requires_grad=False).type(dtype_long)
+                
+                y_pred = model(x)
+                loss = loss_fn(y_pred, y_classes)
+            
+                model.zero_grad()  # Zero out the previous gradient computation
+                loss.backward()    # Compute the gradient
+                optimizer.step()   # Use the gradient information to
+                
+                if (epoch*ceil(train_xy.shape[0]/batch_size)+i) % 20 ==0:
+                    num_iter.append(epoch*ceil(train_xy.shape[0]/batch_size)+i)
+                    y_pred_train_x = model(train_x).data.numpy()
+                    performance_train.append((np.mean(np.argmax(y_pred_train_x, 1) == train_xy[:,-1])))
+        legend.append("Input Dimension = "+ str(dim))
+        plt.plot(num_iter, performance_train,'-')
+    plt.legend(legend)
+    plt.xlabel('Number of Iterations')
+    plt.ylabel('Performance')
+    plt.savefig('figures/part8fdim.jpg')
+    plt.show()
+
+# Part 8_3
+# -----------------------------------------------------------------------------
+def part8_3(plot = True,dim = 32):
+    
+    print "Running Part 8 3"
     
     torch.manual_seed(0)
     
@@ -216,7 +459,7 @@ def part8_2(plot = True,dim = 32):
     validation_x = Variable(torch.from_numpy(validation_xy[:,:-1]), requires_grad=False).type(dtype_float)
     performance_train = []
     performance_validation = []
-    num_epoch = []
+    num_iter = []
     
     for epoch in range(n_epoch):
         for i, data in enumerate(dataloader):
@@ -230,19 +473,19 @@ def part8_2(plot = True,dim = 32):
             loss.backward()    # Compute the gradient
             optimizer.step()   # Use the gradient information to
         
-        if epoch % 5 ==0:
-            num_epoch.append(epoch)
-            y_pred_train_x = model(train_x).data.numpy()
-            performance_train.append((np.mean(np.argmax(y_pred_train_x, 1) == train_xy[:,-1])))
-            #print (np.mean(np.argmax(y_pred_train_x, 1) == train_xy[:,-1]))
-            y_pred_validation_x = model(validation_x).data.numpy()
-            performance_validation.append((np.mean(np.argmax(y_pred_validation_x, 1) == validation_xy[:,-1])))
-            #print (np.mean(np.argmax(y_pred_validation_x, 1) == validation_xy[:,-1]))
+            if (epoch*ceil(train_xy.shape[0]/batch_size)+i) % 10 ==0:
+                num_iter.append(epoch*ceil(train_xy.shape[0]/batch_size)+i)
+                y_pred_train_x = model(train_x).data.numpy()
+                performance_train.append((np.mean(np.argmax(y_pred_train_x, 1) == train_xy[:,-1])))
+                #print (np.mean(np.argmax(y_pred_train_x, 1) == train_xy[:,-1]))
+                y_pred_validation_x = model(validation_x).data.numpy()
+                performance_validation.append((np.mean(np.argmax(y_pred_validation_x, 1) == validation_xy[:,-1])))
+                #print (np.mean(np.argmax(y_pred_validation_x, 1) == validation_xy[:,-1]))
         
     if plot==True:
-        plt.plot(num_epoch, performance_train,'-',num_epoch, performance_validation,'-')
+        plt.plot(num_iter, performance_train,'-',num_iter, performance_validation,'-')
         plt.legend(['training','validation'])
-        plt.xlabel('Number of Epoches')
+        plt.xlabel('Number of Iterations')
         plt.ylabel('Performance')
         plt.savefig('figures/part8f1.jpg')
         plt.show()
@@ -260,7 +503,7 @@ def part9(dim = 32):
     
     print "Running Part 9"
     
-    model = part8_2(False)
+    model = part8_3(False)
     
     for i in range(5):
         print ("Node " +str(i)+" looks like:")
@@ -275,7 +518,7 @@ if __name__ == "__main__":
     #Important Note: Please uncomment the following line when using an IDE!
     os.chdir(os.path.dirname(__file__))
     #train_xy,validation_xy,test_xy = part8_1()
-    model = part8_2()
+    part8_DIM()
     #part9()
 
 

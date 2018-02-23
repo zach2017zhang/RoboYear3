@@ -226,4 +226,4 @@ if __name__ == "__main__":
     os.chdir(os.path.dirname(__file__))
     #get_faces()
     #resize_faces(227,"cropped_images/", need_gray = False)
-    #resize_faces(32,"cropped_images/", need_gray = True)
+    #resize_faces(64,"cropped_images/", need_gray = True)
