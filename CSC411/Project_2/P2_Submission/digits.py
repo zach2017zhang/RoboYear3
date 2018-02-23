@@ -448,7 +448,7 @@ def part4():
     Wb = np.random.normal(0.,0.0001,[num_digits,input_size+1])
     
     al=0.00001
-    trained_Wb = grad_descent(forward, backward, NLL, training_x, training_y.T, Wb,momentum = False,learning_curve=True, max_iter=1000, alpha=al,figure_name = "part4f1", tx=test_x, ty=test_y.T)
+    trained_Wb = grad_descent(forward, backward, NLL, training_x, training_y.T, Wb,momentum = False,learning_curve=True, max_iter=2000, alpha=al,figure_name = "part4f1", tx=test_x, ty=test_y.T)
     trained_W = trained_Wb[:,:-1]
 
     for i in range(trained_W.shape[0]):
