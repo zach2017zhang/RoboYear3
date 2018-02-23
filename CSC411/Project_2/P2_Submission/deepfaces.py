@@ -257,7 +257,7 @@ def part10(plot = True,dim = 227):
     #use 3*227*227
     train_xy, validation_xy,test_xy = image_processing(model)
 
-    n_epoch = 500
+    n_epoch = 160
     batch_size = 32
     
     dtype_float = torch.FloatTensor
@@ -276,7 +276,7 @@ def part10(plot = True,dim = 227):
     validation_x = Variable(torch.from_numpy(validation_xy[:,:-1]), requires_grad=False).type(dtype_float)
     performance_train = []
     performance_validation = []
-    num_epoch = []
+    num_iter = []
     
     for epoch in range(n_epoch):
         for i, data in enumerate(dataloader):
@@ -290,8 +290,8 @@ def part10(plot = True,dim = 227):
             loss.backward()    # Compute the gradient
             optimizer.step()   # Use the gradient information to
         
-        if epoch % 5 ==0:
-            num_epoch.append(epoch)
+        if (epoch*ceil(train_xy.shape[0]/batch_size)+i) % 1 ==0:
+            num_iter.append(epoch*ceil(train_xy.shape[0]/batch_size)+i)
             y_pred_train_x = model.classifier(train_x).data.numpy()
             performance_train.append((np.mean(np.argmax(y_pred_train_x, 1) == train_xy[:,-1])))
             #print (np.mean(np.argmax(y_pred_train_x, 1) == train_xy[:,-1]))
@@ -300,9 +300,9 @@ def part10(plot = True,dim = 227):
             #print (np.mean(np.argmax(y_pred_validation_x, 1) == validation_xy[:,-1]))
         
     if plot==True:
-        plt.plot(num_epoch, performance_train,'-',num_epoch, performance_validation,'-')
+        plt.plot(num_iter, performance_train,'-',num_iter, performance_validation,'-')
         plt.legend(['training','validation'])
-        plt.xlabel('Number of Epoches')
+        plt.xlabel('Number of Iterations')
         plt.ylabel('Performance')
         plt.savefig('figures/part10f1.jpg')
         plt.show()
@@ -329,7 +329,7 @@ def part10_plus():
 if __name__ == "__main__":
     #Important Note: Please uncomment the following line when using an IDE!
     os.chdir(os.path.dirname(__file__))
-    #model = part10()
+    model = part10()
     #part10_plus()
     
 
