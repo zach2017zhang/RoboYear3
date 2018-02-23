@@ -730,11 +730,11 @@ if __name__ == "__main__":
     #Important Note: Please uncomment the following line when using an IDE!
     os.chdir(os.path.dirname(__file__))
     #train_xy,validation_xy,test_xy = part8_1()
-    #part8_CAL
+    part8_CAL()
     #part8_NHN()
     #part8_DIM()
     #part8_MB()
-    part8_W()
+    #part8_W()
     #part8_LR()
     #part8_3()
     #part9()
