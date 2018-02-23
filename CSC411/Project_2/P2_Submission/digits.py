@@ -179,7 +179,7 @@ def performance(x, y,Wb, print_output = True,report = "test set"):
     return result/x.shape[0]
     
 def grad_descent(f, df, loss, x, y, init_t,ada_learning_rate = True, learning_curve=False, \
-                 tx=[], ty=[], figure_name = 'default',momentum = True, damping = 0.9, alpha=0.0001, max_iter=500, EPS = 1e-5):
+                 tx=[], ty=[], figure_name = 'default',momentum = True, damping = 0.9, alpha=0.0001, max_iter=1000, EPS = 1e-5, zoom_in = 25):
     """
     Input:
         ada_learning_rate: adaptive learning rate flag
@@ -236,8 +236,8 @@ def grad_descent(f, df, loss, x, y, init_t,ada_learning_rate = True, learning_cu
         plt.savefig('figures/'+figure_name+'.jpg')
         plt.show()
 
-        plt.plot(num_iter[5:], performance_training[5:],'-')
-        plt.plot(num_iter[5:], performance_test[5:],'-')
+        plt.plot(num_iter[zoom_in:], performance_training[zoom_in:],'-')
+        plt.plot(num_iter[zoom_in:], performance_test[zoom_in:],'-')
         plt.legend(['training', 'test'])
         plt.xlabel('Number of Iterations')
         plt.ylabel('Performance')
@@ -352,6 +352,67 @@ def part3():
  
 # Part 4
 # -----------------------------------------------------------------------------
+def part4_grad_descent(f, df, loss, x, y, init_t,ada_learning_rate = False, \
+                 momentum = True, damping = 0.9, alpha=0.0001, max_iter=500, EPS = 1e-5):
+    """
+    Input:
+        ada_learning_rate: adaptive learning rate flag
+        momentum: momentum flag
+        damping: momentum danping ratio
+    Output:
+    """
+    v = np.zeros((init_t.shape[0],init_t.shape[1])) #used for momentum
+    
+    prev_t = init_t-10*EPS
+    t = init_t.copy()
+    
+    currloss = loss(y, f(x,t)) # used for adaptive alpha
+    curr_alpha = alpha # used for adaptive alpha
+    
+    iter  = 0
+    num_iter = []
+    loss_function_value = []
+    
+    while norm(t - prev_t) >  EPS and iter < max_iter:
+        
+        #plot learning curve
+        if iter % 5 == 0:
+            num_iter.append(iter)
+            loss_function_value.append(currloss)
+        #normal gradient descent
+        prev_t = t.copy()
+        if momentum:
+            v = damping*v+curr_alpha*df(y, f(x,t), x)
+            t -= v
+        else:
+            t -= curr_alpha*df(y, f(x,t), x)
+        
+        if iter % 5 == 0:
+            if currloss < loss(y, f(x,t)) and ada_learning_rate:
+                curr_alpha = curr_alpha/2
+            currloss = loss(y, f(x,t))
+            #print "Gradient: ", df(x, y, t), "\n"
+        iter += 1
+
+    """
+    plt.plot(num_iter, loss_function_value,'-')
+    plt.legend(['training'])
+    plt.xlabel('Number of Iterations')
+    plt.ylabel('Loss Function Value')
+    #plt.savefig('figures/'+figure_name+'.jpg')
+    plt.show()
+
+    plt.plot(num_iter[5:], performance_training[5:],'-')
+    plt.plot(num_iter[5:], performance_test[5:],'-')
+    plt.legend(['training', 'test'])
+    plt.xlabel('Number of Iterations')
+    plt.ylabel('Performance')
+    plt.savefig('figures/'+figure_name+'_1.jpg')
+    plt.show()
+    """
+    
+    return num_iter, loss_function_value
+
 def part4():
     
     print "Running Part 4"
@@ -365,8 +426,29 @@ def part4():
     training_x, training_y,validation_x,validation_y, test_x, test_y = create_sets(v_size_per_digit=0)     
     #create weights    
     np.random.seed(0)
-    Wb = np.random.normal(0.,0.01,[num_digits,input_size+1])
-    trained_Wb = grad_descent(forward, backward, NLL, training_x, training_y.T, Wb,momentum = False,learning_curve=True, max_iter=500, alpha=0.0001,figure_name = "part4f1", tx=test_x, ty=test_y.T)
+    
+    
+    print "Tune alpha"
+    Wb = np.random.normal(0.,0.0001,[num_digits,input_size+1])
+    
+    lengend_al = []
+    for al in [x*0.000001 for x in range(5,26,5)]:
+        num_iter, loss_function_value = part4_grad_descent(forward, backward, NLL, training_x, training_y.T, Wb,momentum = False, max_iter=50, alpha=al)    
+        plt.plot(num_iter, loss_function_value,'-')
+        lengend_al.append("alpha = "+str(al))
+    plt.legend(lengend_al)
+    plt.xlabel('Number of Iterations')
+    plt.ylabel('Loss Function Value')
+    plt.savefig('figures/part4fta.jpg')
+    plt.show()
+    
+    print "Generate learning curve and weights visualizaion"
+    
+    np.random.seed(1)
+    Wb = np.random.normal(0.,0.0001,[num_digits,input_size+1])
+    
+    al=0.00001
+    trained_Wb = grad_descent(forward, backward, NLL, training_x, training_y.T, Wb,momentum = False,learning_curve=True, max_iter=1000, alpha=al,figure_name = "part4f1", tx=test_x, ty=test_y.T)
     trained_W = trained_Wb[:,:-1]
 
     for i in range(trained_W.shape[0]):
@@ -376,17 +458,8 @@ def part4():
         plt.show()
         plt.imsave("figures/part4f"+str(i+2)+".jpg",(trained_W[i,:]).reshape(28,28), cmap=cm.coolwarm)
 
-    """
-    f, axarr = plt.subplots(5, 2)
-    for i in range(5):
-        for j in range(2):
-            axarr[i, j].imshow((trained_W[i*2+j,:]).reshape(28,28),interpolation='none', cmap=cm.coolwarm)
-            axarr[i, j].axes.get_xaxis().set_visible(False)
-            axarr[i, j].axes.get_yaxis().set_visible(False)
-    plt.savefig('figures/part1f2.jpg')
-    plt.show()
-    """
     return 0
+    
 
 # Part 5
 # -----------------------------------------------------------------------------
@@ -534,8 +607,8 @@ if __name__ == "__main__":
     #part1()
     #part2()
     #part3()
-    #part4()
-    part5()
-    part6()
+    part4()
+    #part5()
+    #part6()
     
     
