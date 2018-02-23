@@ -630,7 +630,7 @@ def part8_3(plot = True,dim = 64):
     
     print "Running Part 8 3"
     
-    torch.manual_seed(0)
+    torch.manual_seed(1)
     
     train_xy, validation_xy,test_xy =part8_1(dimension = dim)
     
@@ -653,10 +653,10 @@ def part8_3(plot = True,dim = 64):
             )
     
     #initialize weight
-    model[0].weight.data.normal_(0.0,0.1)
-    model[2].weight.data.normal_(0.0,0.1)
-    model[0].bias.data.normal_(0.0,0.1)
-    model[2].bias.data.normal_(0.0,0.1)
+    model[0].weight.data.normal_(0.0,0.01)
+    model[2].weight.data.normal_(0.0,0.01)
+    model[0].bias.data.normal_(0.0,0.01)
+    model[2].bias.data.normal_(0.0,0.01)
     
     dataloader = DataLoader(train_xy, batch_size=batch_size,shuffle=True)
     
@@ -716,13 +716,27 @@ def part9(dim = 64):
     print "Running Part 9"
     
     model = part8_3(False)
-    
-    for i in range(5):
+    #classify_act = {'Lorraine Bracco':[[1],[0],[0],[0],[0],[0]], 'Peri Gilpin':[[0],[1],[0],[0],[0],[0]], 'Angie Harmon':[[0],[0],[1],[0],[0],[0]], 'Alec Baldwin':[[0],[0],[0],[1],[0],[0]], 'Bill Hader':[[0],[0],[0],[0],[1],[0]], 'Steve Carell':[[0],[0],[0],[0],[0],[1]]}
+    for i in range(12):
         print ("Node " +str(i)+" looks like:")
         plt.imshow(model[0].weight.data.numpy()[i, :].reshape((dim, dim)), cmap=plt.cm.coolwarm)
         plt.savefig('figures/part9f'+str(i)+'.jpg')
         plt.show()
     
+    print "Weights for Lorraine Bracco"
+    print model[2].weight.data.numpy()[0]
+    print "Weights for Peri Gilpin"
+    print model[2].weight.data.numpy()[1]
+    print "Weights for Angie Harmon"
+    print model[2].weight.data.numpy()[2]
+    print "Weights for Alec Baldwin"
+    print model[2].weight.data.numpy()[3]
+    print "Weights for Bill Hader"
+    print model[2].weight.data.numpy()[4]
+    print "Weights for Steve Carell"
+    print model[2].weight.data.numpy()[5]
+    
+    print "For each actor/actress, the most positive 4 images are considered as features of this actor/actress."
     
     
     
@@ -730,14 +744,14 @@ if __name__ == "__main__":
     #Important Note: Please uncomment the following line when using an IDE!
     os.chdir(os.path.dirname(__file__))
     #train_xy,validation_xy,test_xy = part8_1()
-    part8_CAL()
+    #part8_CAL()
     #part8_NHN()
     #part8_DIM()
     #part8_MB()
     #part8_W()
     #part8_LR()
     #part8_3()
-    #part9()
+    part9()
 
 
 # Test Code

@@ -146,13 +146,6 @@ class MyAlexNet(nn.Module):
         for i in features_weight_i:
             self.features[i].weight = an_builtin.features[i].weight
             self.features[i].bias = an_builtin.features[i].bias
-        
-        """
-        classifier_weight_i = [0, 2]
-        for i in classifier_weight_i:
-            self.classifier[i].weight.data.normal_(0.0,0.01)
-            self.classifier[i].bias.data.normal_(0.0,0.01)
-        """
         classifier_weight_i = [0]
         for i in classifier_weight_i:
             self.classifier[i].weight.data.normal_(0.0,0.01)
@@ -175,22 +168,11 @@ class MyAlexNet(nn.Module):
             nn.ReLU(inplace=True),
             nn.MaxPool2d(kernel_size=3, stride=2),
         )
-        """
-        self.classifier = nn.Sequential(
-            nn.Linear(256 * 6 * 6, 12),
-            nn.Tanh(),
-            nn.Linear(12, num_classes),
-            nn.Softmax()
-            )
-        """
         self.classifier = nn.Sequential(
             nn.Linear(256 * 6 * 6, num_classes),
             nn.Softmax()
             )
-        
-        
         self.load_weights()
-        
         for param in self.features.parameters():
             param.requires_grad = False
 
