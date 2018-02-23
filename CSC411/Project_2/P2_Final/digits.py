@@ -174,7 +174,7 @@ def performance(x, y,Wb, print_output = True,report = "test set"):
             result+=1
     
     if print_output:
-        print "\nPerformance on "+report+ ": " +str(result)+"/"+str(x.shape[0])+"\n"
+        print "Performance on "+report+ ": " +str(result)+"/"+str(x.shape[0])+"\n"
     
     return result/x.shape[0]
     
@@ -221,8 +221,7 @@ def grad_descent(f, df, loss, x, y, init_t,ada_learning_rate = True, learning_cu
             if currloss < loss(y, f(x,t)) and ada_learning_rate:
                 curr_alpha = curr_alpha/2
             currloss = loss(y, f(x,t))
-            print currloss
-            #print "Gradient: ", df(x, y, t), "\n"
+            #print currloss
         
         iter += 1
     
@@ -393,23 +392,6 @@ def part4_grad_descent(f, df, loss, x, y, init_t,ada_learning_rate = False, \
             currloss = loss(y, f(x,t))
             #print "Gradient: ", df(x, y, t), "\n"
         iter += 1
-
-    """
-    plt.plot(num_iter, loss_function_value,'-')
-    plt.legend(['training'])
-    plt.xlabel('Number of Iterations')
-    plt.ylabel('Loss Function Value')
-    #plt.savefig('figures/'+figure_name+'.jpg')
-    plt.show()
-
-    plt.plot(num_iter[5:], performance_training[5:],'-')
-    plt.plot(num_iter[5:], performance_test[5:],'-')
-    plt.legend(['training', 'test'])
-    plt.xlabel('Number of Iterations')
-    plt.ylabel('Performance')
-    plt.savefig('figures/'+figure_name+'_1.jpg')
-    plt.show()
-    """
     
     return num_iter, loss_function_value
 
@@ -676,13 +658,40 @@ def part6():
     gd_traj = part6_grad_descent_2var(forward, backward, NLL, training_x, training_y.T, trained_Wb, init_w1,init_w2,w1_r,w1_c,w2_r,w2_c, alpha=0.0035,ada_learning_rate = False, momentum = False, damping = 0)
     mo_traj = part6_grad_descent_2var(forward, backward, NLL, training_x, training_y.T, trained_Wb, init_w1,init_w2,w1_r,w1_c,w2_r,w2_c, alpha=0.0035,ada_learning_rate = False, momentum = True,damping = 0.4)
 
+    print "a"
+    CS = plt.contour(w1z, w2z, C, camp=cm.coolwarm)
+    #plt.plot([a for a, b in gd_traj], [b for a,b in gd_traj], 'yo-', label="No Momentum")
+    #plt.plot([a for a, b in mo_traj], [b for a,b in mo_traj], 'go-', label="Momentum")
+    plt.legend(loc='upper left')
+    plt.clabel(CS)
+    #plt.title('Contour plot')
+    plt.savefig('figures/part6f1.jpg')
+    plt.show()
+    
+    print "b and c"
     CS = plt.contour(w1z, w2z, C, camp=cm.coolwarm)
     plt.plot([a for a, b in gd_traj], [b for a,b in gd_traj], 'yo-', label="No Momentum")
     plt.plot([a for a, b in mo_traj], [b for a,b in mo_traj], 'go-', label="Momentum")
     plt.legend(loc='upper left')
-    plt.title('Contour plot')
-    plt.savefig('figures/part6f1.jpg')
+    #plt.title('Contour plot')
+    plt.savefig('figures/part6f2.jpg')
     plt.show()
+    
+    print "e"
+    init_w1 = trained_Wb[w1_r][w1_c]-1.5
+    init_w2 = trained_Wb[w2_r][w2_c]-1.5
+    gd_traj = part6_grad_descent_2var(forward, backward, NLL, training_x, training_y.T, trained_Wb, init_w1,init_w2,w1_r,w1_c,w2_r,w2_c, alpha=0.001,ada_learning_rate = False, momentum = False, damping = 0)
+    mo_traj = part6_grad_descent_2var(forward, backward, NLL, training_x, training_y.T, trained_Wb, init_w1,init_w2,w1_r,w1_c,w2_r,w2_c, alpha=0.001,ada_learning_rate = False, momentum = True,damping = 0.9)
+
+    CS = plt.contour(w1z, w2z, C, camp=cm.coolwarm)
+    plt.plot([a for a, b in gd_traj], [b for a,b in gd_traj], 'yo-', label="No Momentum")
+    plt.plot([a for a, b in mo_traj], [b for a,b in mo_traj], 'go-', label="Momentum")
+    plt.legend(loc='upper left')
+    #plt.title('Contour plot')
+    plt.savefig('figures/part6f3.jpg')
+    plt.show()
+
+
     
 if __name__ == "__main__":
     os.chdir(os.path.dirname(__file__))
@@ -690,7 +699,7 @@ if __name__ == "__main__":
     #part2()
     #part3()
     #part4()
-    part5()
+    #part5()
     #part6()
     
     

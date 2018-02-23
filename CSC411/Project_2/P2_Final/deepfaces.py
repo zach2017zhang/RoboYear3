@@ -330,6 +330,6 @@ if __name__ == "__main__":
     #Important Note: Please uncomment the following line when using an IDE!
     os.chdir(os.path.dirname(__file__))
     model = part10()
-    #part10_plus()
+    part10_plus()
     
 

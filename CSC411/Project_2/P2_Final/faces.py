@@ -262,7 +262,7 @@ def part8_CAL():
             if (epoch*ceil(train_xy.shape[0]/batch_size)+i) % 200 ==0:
                 y_pred_train_x = model(train_x).data.numpy()
                 performance_train_2.append((np.mean(np.argmax(y_pred_train_x, 1) == train_xy[:,-1])))
-    print num_iter    
+    
     plt.plot(num_iter, performance_train_1,'-',num_iter, performance_train_2,'-')
     plt.legend(['Tanh','ReLU'])
     plt.xlabel('Number of Iterations')
@@ -748,10 +748,10 @@ if __name__ == "__main__":
     #part8_NHN()
     #part8_DIM()
     #part8_MB()
-    #part8_W()
+    #art8_W()
     #part8_LR()
     #part8_3()
-    part9()
+    #part9()
 
 
 # Test Code
