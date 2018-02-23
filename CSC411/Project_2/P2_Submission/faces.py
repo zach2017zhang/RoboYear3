@@ -264,7 +264,7 @@ def part8_CAL():
                 performance_train_2.append((np.mean(np.argmax(y_pred_train_x, 1) == train_xy[:,-1])))
     print num_iter    
     plt.plot(num_iter, performance_train_1,'-',num_iter, performance_train_2,'-')
-    plt.legend(['training_1','training_2'])
+    plt.legend(['Tanh','ReLU'])
     plt.xlabel('Number of Iterations')
     plt.ylabel('Performance')
     plt.savefig('figures/part8fcal.jpg')
@@ -274,7 +274,7 @@ def part8_CAL():
 # -----------------------------------------------------------------------------
 def part8_NHN():
     print "Running Part 8 3"
-    print "Choose Hidden Layer "
+    print "Choose Number of Hidden Layer "
     
     train_xy, validation_xy,test_xy =part8_1()
 
@@ -412,15 +412,227 @@ def part8_DIM():
     plt.savefig('figures/part8fdim.jpg')
     plt.show()
 
+# Part 8_2
+# -----------------------------------------------------------------------------
+def part8_MB():
+    print "Running Part 8 3"
+    print "Choose MiniBatch Size "
+    
+    dim_x = 64*64
+    dim_h = 12
+    dim_out = 6
+    n_epoch = 200
+    
+    dtype_float = torch.FloatTensor
+    dtype_long = torch.LongTensor
+
+    loss_fn = torch.nn.CrossEntropyLoss()
+    learning_rate = 2e-4
+    momentum_set = 0.9
+    
+    legend = []
+    
+    train_xy, validation_xy,test_xy =part8_1(dimension = 64)
+    train_x = Variable(torch.from_numpy(train_xy[:,:-1]), requires_grad=False).type(dtype_float)
+    
+    for batch_size in [8, 16, 32, 64]:
+
+        dataloader = DataLoader(train_xy, batch_size=batch_size,shuffle=True)
+
+        num_iter = []
+        performance_train = []
+        model = torch.nn.Sequential(
+                torch.nn.Linear(dim_x, dim_h),
+                torch.nn.Tanh(),
+                torch.nn.Linear(dim_h, dim_out),
+                torch.nn.Softmax()
+                )
+    
+        #optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum_set)
+        optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+        
+        torch.manual_seed(0)
+        #initialize weight
+        model[0].weight.data.normal_(0.0,0.01)
+        model[2].weight.data.normal_(0.0,0.01)
+        model[0].bias.data.normal_(0.0,0.01)
+        model[2].bias.data.normal_(0.0,0.01)
+        
+        for epoch in range(n_epoch):
+            for i, data in enumerate(dataloader):
+                x = Variable(data[:,:-1], requires_grad=False).type(dtype_float)
+                y_classes = Variable(data[:,-1], requires_grad=False).type(dtype_long)
+                
+                y_pred = model(x)
+                loss = loss_fn(y_pred, y_classes)
+            
+                model.zero_grad()  # Zero out the previous gradient computation
+                loss.backward()    # Compute the gradient
+                optimizer.step()   # Use the gradient information to
+                
+            if (epoch) % 20 ==0:
+                num_iter.append(epoch)
+                y_pred_train_x = model(train_x).data.numpy()
+                performance_train.append((np.mean(np.argmax(y_pred_train_x, 1) == train_xy[:,-1])))
+        legend.append("MiniBatch Size = "+ str(batch_size))
+        plt.plot(num_iter, performance_train,'-')
+    plt.legend(legend)
+    plt.xlabel('Number of Epochs')
+    plt.ylabel('Performance')
+    plt.savefig('figures/part8fmb.jpg')
+    plt.show()
+
+# Part 8_2
+# -----------------------------------------------------------------------------
+def part8_W():
+    print "Running Part 8 3"
+    print "Weights Initialization "
+    
+    dim_x = 64*64
+    dim_h = 12
+    dim_out = 6
+    n_epoch = 1000
+    
+    dtype_float = torch.FloatTensor
+    dtype_long = torch.LongTensor
+
+    loss_fn = torch.nn.CrossEntropyLoss()
+    #learning_rate = 2e-4
+    batch_size = 32
+    learning_rate = 0.0003
+    
+    legend = []
+    
+    train_xy, validation_xy,test_xy =part8_1(dimension = 64)
+    train_x = Variable(torch.from_numpy(train_xy[:,:-1]), requires_grad=False).type(dtype_float)
+    
+    for var in [0.0001, 0.001, 0.01, 0.1]:
+
+        dataloader = DataLoader(train_xy, batch_size=batch_size,shuffle=True)
+
+        num_iter = []
+        performance_train = []
+        model = torch.nn.Sequential(
+                torch.nn.Linear(dim_x, dim_h),
+                torch.nn.Tanh(),
+                torch.nn.Linear(dim_h, dim_out),
+                torch.nn.Softmax()
+                )
+    
+        #optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum_set)
+        optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+        
+        torch.manual_seed(0)
+        #initialize weight
+        model[0].weight.data.normal_(0.0,var)
+        model[2].weight.data.normal_(0.0,var)
+        model[0].bias.data.normal_(0.0,var)
+        model[2].bias.data.normal_(0.0,var)
+        
+        for epoch in range(n_epoch):
+            for i, data in enumerate(dataloader):
+                x = Variable(data[:,:-1], requires_grad=False).type(dtype_float)
+                y_classes = Variable(data[:,-1], requires_grad=False).type(dtype_long)
+                
+                y_pred = model(x)
+                loss = loss_fn(y_pred, y_classes)
+            
+                model.zero_grad()  # Zero out the previous gradient computation
+                loss.backward()    # Compute the gradient
+                optimizer.step()   # Use the gradient information to
+                
+            if (epoch) % 20 ==0:
+                num_iter.append(epoch)
+                y_pred_train_x = model(train_x).data.numpy()
+                performance_train.append((np.mean(np.argmax(y_pred_train_x, 1) == train_xy[:,-1])))
+        legend.append("Variance = "+ str(var))
+        plt.plot(num_iter, performance_train,'-')
+    plt.legend(legend)
+    plt.xlabel('Number of Epochs')
+    plt.ylabel('Performance')
+    plt.savefig('figures/part8fw.jpg')
+    plt.show()
+
+# Part 8_2
+# -----------------------------------------------------------------------------
+def part8_LR():
+    print "Running Part 8 3"
+    print "Choose Learning Rate "
+    
+    dim_x = 64*64
+    dim_h = 12
+    dim_out = 6
+    n_epoch = 1000
+    
+    dtype_float = torch.FloatTensor
+    dtype_long = torch.LongTensor
+
+    loss_fn = torch.nn.CrossEntropyLoss()
+    #learning_rate = 2e-4
+    batch_size = 32
+    momentum_set = 0.9
+    
+    legend = []
+    
+    train_xy, validation_xy,test_xy =part8_1(dimension = 64)
+    train_x = Variable(torch.from_numpy(train_xy[:,:-1]), requires_grad=False).type(dtype_float)
+    
+    for learning_rate in [x * 1e-4 for x in range(1,8,2)]:
+
+        dataloader = DataLoader(train_xy, batch_size=batch_size,shuffle=True)
+
+        num_iter = []
+        performance_train = []
+        model = torch.nn.Sequential(
+                torch.nn.Linear(dim_x, dim_h),
+                torch.nn.Tanh(),
+                torch.nn.Linear(dim_h, dim_out),
+                torch.nn.Softmax()
+                )
+    
+        #optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate, momentum=momentum_set)
+        optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+        
+        torch.manual_seed(0)
+        #initialize weight
+        model[0].weight.data.normal_(0.0,0.01)
+        model[2].weight.data.normal_(0.0,0.01)
+        model[0].bias.data.normal_(0.0,0.01)
+        model[2].bias.data.normal_(0.0,0.01)
+        
+        for epoch in range(n_epoch):
+            for i, data in enumerate(dataloader):
+                x = Variable(data[:,:-1], requires_grad=False).type(dtype_float)
+                y_classes = Variable(data[:,-1], requires_grad=False).type(dtype_long)
+                
+                y_pred = model(x)
+                loss = loss_fn(y_pred, y_classes)
+            
+                model.zero_grad()  # Zero out the previous gradient computation
+                loss.backward()    # Compute the gradient
+                optimizer.step()   # Use the gradient information to
+                
+            if (epoch) % 20 ==0:
+                num_iter.append(epoch)
+                y_pred_train_x = model(train_x).data.numpy()
+                performance_train.append((np.mean(np.argmax(y_pred_train_x, 1) == train_xy[:,-1])))
+        legend.append("LR = "+ str(learning_rate))
+        plt.plot(num_iter, performance_train,'-')
+    plt.legend(legend)
+    plt.xlabel('Number of Epochs')
+    plt.ylabel('Performance')
+    plt.savefig('figures/part8flr.jpg')
+    plt.show()
+
 # Part 8_3
 # -----------------------------------------------------------------------------
-def part8_3(plot = True,dim = 32):
+def part8_3(plot = True,dim = 64):
     
     print "Running Part 8 3"
     
     torch.manual_seed(0)
     
-    train_xy, validation_xy,test_xy =part8_1()
+    train_xy, validation_xy,test_xy =part8_1(dimension = dim)
     
     dim_x = dim*dim
     dim_h = 12
@@ -473,7 +685,7 @@ def part8_3(plot = True,dim = 32):
             loss.backward()    # Compute the gradient
             optimizer.step()   # Use the gradient information to
         
-            if (epoch*ceil(train_xy.shape[0]/batch_size)+i) % 10 ==0:
+            if (epoch*ceil(train_xy.shape[0]/batch_size)+i) % 20 ==0:
                 num_iter.append(epoch*ceil(train_xy.shape[0]/batch_size)+i)
                 y_pred_train_x = model(train_x).data.numpy()
                 performance_train.append((np.mean(np.argmax(y_pred_train_x, 1) == train_xy[:,-1])))
@@ -499,7 +711,7 @@ def part8_3(plot = True,dim = 32):
     
 # Part 9
 # -----------------------------------------------------------------------------
-def part9(dim = 32):
+def part9(dim = 64):
     
     print "Running Part 9"
     
@@ -508,7 +720,7 @@ def part9(dim = 32):
     for i in range(5):
         print ("Node " +str(i)+" looks like:")
         plt.imshow(model[0].weight.data.numpy()[i, :].reshape((dim, dim)), cmap=plt.cm.coolwarm)
-        plt.savefig('figures/part8f'+str(i+2)+'.jpg')
+        plt.savefig('figures/part9f'+str(i)+'.jpg')
         plt.show()
     
     
@@ -518,7 +730,13 @@ if __name__ == "__main__":
     #Important Note: Please uncomment the following line when using an IDE!
     os.chdir(os.path.dirname(__file__))
     #train_xy,validation_xy,test_xy = part8_1()
-    part8_DIM()
+    #part8_CAL
+    #part8_NHN()
+    #part8_DIM()
+    #part8_MB()
+    #part8_W()
+    #part8_LR()
+    part8_3()
     #part9()
 
 
