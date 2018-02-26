@@ -147,9 +147,7 @@ def kenken_csp_model(kenken_grid):
             if kenken_cons[-1] == 0: #+
                 for trial in product(list(range(1,n+1)),repeat = (len(kenken_cons)-2)):
                     if reduce(operator.add,trial) == kenken_cons[-2]:
-                        for perm_trial in permutations(trial):
-                            if not perm_trial in tuples:
-                                tuples.append(perm_trial)
+                        tuples.append(trial)
             elif kenken_cons[-1] == 1: #-
                 for trial in product(list(range(1,n+1)),repeat = (len(kenken_cons)-2)):
                     if reduce(operator.sub,trial) == kenken_cons[-2]:
@@ -165,9 +163,7 @@ def kenken_csp_model(kenken_grid):
             else: #*
                 for trial in product(list(range(1,n+1)),repeat = (len(kenken_cons)-2)):
                     if reduce(operator.mul,trial) == kenken_cons[-2]:
-                        for perm_trial in permutations(trial):
-                            if not perm_trial in tuples:
-                                tuples.append(perm_trial)
+                        tuples.append(trial)
             constraint.add_satisfying_tuples(tuples)
             constraint_list.append(constraint)
             num_cons += 1
