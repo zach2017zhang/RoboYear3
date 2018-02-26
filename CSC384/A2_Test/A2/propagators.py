@@ -101,7 +101,11 @@ def prop_FC(csp, newVar=None):
                     unasgn_var.unassign()
                     val_list = []
                 if unasgn_var.cur_domain_size() == 0:
+                    #print (False)
+                    #print (prune_list)
                     return (False, prune_list)
+    #print (True)
+    #print (prune_list)
     return (True, prune_list)
     #pass
 
@@ -132,10 +136,12 @@ def prop_GAC(csp, newVar=None):
                         prune_list.append((v,d))
                         if v.cur_domain_size()==0:
                             GAC_queue.clear()
+                            #print (False, prune_list)
                             return (False, prune_list)
                         else:
                             for cp in csp.get_cons_with_var(v):
                                 if not cp in GAC_queue:
                                     GAC_queue.append(cp)
+    #print (True, prune_list)
     return (True,prune_list)
     #pass
