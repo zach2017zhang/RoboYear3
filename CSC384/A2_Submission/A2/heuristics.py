@@ -29,9 +29,9 @@ def ord_dh(csp):
         var_degree = 0
         for c in csp.get_cons_with_var(var):
             if c.get_n_unasgn()>1:
-                var_degree +=1
+                var_degree += c.get_n_unasgn()-1
         vars_degree.append(var_degree)
-    #print (unasgn_vars[vars_degree.index(max(vars_degree))])
+    print (unasgn_vars[vars_degree.index(max(vars_degree))])
     return unasgn_vars[vars_degree.index(max(vars_degree))]
     #pass
 
