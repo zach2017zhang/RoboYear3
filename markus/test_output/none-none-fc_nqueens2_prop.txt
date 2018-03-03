@@ -1,0 +1,3 @@
+(True, [])
+(False, [(Var-Q2, 1), (Var-Q2, 2)])
+(False, [(Var-Q2, 1), (Var-Q2, 2)])

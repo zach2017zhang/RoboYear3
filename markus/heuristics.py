@@ -50,26 +50,9 @@ def val_lcv(csp, var):
     
     for val in vals:
         var.assign(val)
-        GAC_queue = csp.get_cons_with_var(var)
+        cons = csp.get_cons_with_var(var)
         prune_list = []
-        
-        """
-        while not len(GAC_queue)==0:
-            c = GAC_queue.pop(0)
-            for v in c.get_scope():
-                if v.is_assigned():
-                    continue
-                else:
-                    current_domain = deepcopy(v.cur_domain())
-                    for d in current_domain:
-                        if not c.has_support(v,d):
-                            v.prune_value(d)
-                            prune_list.append((v,d))
-                            for cp in csp.get_cons_with_var(v):
-                                if not cp in GAC_queue:
-                                    GAC_queue.append(cp)
-                                    
-        """
+        val_list = []
         for c in cons:
             if c.get_n_unasgn() == 1:
                 unasgn_vars = c.get_unasgn_vars()
@@ -79,14 +62,13 @@ def val_lcv(csp, var):
                     unasgn_var = unasgn_vars[0]
                     for d in unasgn_var.cur_domain():
                         unasgn_var.assign(d)
-                        for var in c.get_scope():
-                            val_list.append(var.get_assigned_value())
+                        for vart in c.get_scope():
+                            val_list.append(vart.get_assigned_value())
                         if not c.check(val_list):
                             unasgn_var.prune_value(d)
                             prune_list.append((unasgn_var,d))
                         unasgn_var.unassign()
                         val_list = []
-
         flexibility_list.append(len(prune_list))
         for variable, values in prune_list:
             variable.unprune_value(values)
