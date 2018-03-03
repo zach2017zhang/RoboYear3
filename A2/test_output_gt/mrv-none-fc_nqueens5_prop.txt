@@ -1,6 +1,0 @@
-(True, [])
-(True, [(Var-Q2, 1), (Var-Q2, 2), (Var-Q3, 1), (Var-Q3, 3), (Var-Q4, 1), (Var-Q4, 4), (Var-Q5, 1), (Var-Q5, 5)])
-(True, [(Var-Q3, 2), (Var-Q3, 4), (Var-Q4, 3), (Var-Q4, 5), (Var-Q5, 3)])
-(True, [])
-(True, [(Var-Q5, 2)])
-(True, [])
