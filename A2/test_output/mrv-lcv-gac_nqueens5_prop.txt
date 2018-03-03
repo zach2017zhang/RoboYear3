@@ -1,0 +1,6 @@
+(True, [])
+(True, [(Var-Q2, 1), (Var-Q2, 2), (Var-Q3, 1), (Var-Q3, 3), (Var-Q4, 1), (Var-Q4, 4), (Var-Q5, 1), (Var-Q5, 5), (Var-Q3, 4), (Var-Q4, 3)])
+(True, [(Var-Q2, 3), (Var-Q4, 2), (Var-Q5, 2), (Var-Q5, 4), (Var-Q2, 5)])
+(True, [])
+(True, [])
+(True, [])

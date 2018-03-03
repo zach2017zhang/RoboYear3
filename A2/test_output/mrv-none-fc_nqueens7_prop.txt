@@ -1,0 +1,8 @@
+(True, [])
+(True, [(Var-Q2, 1), (Var-Q2, 2), (Var-Q3, 1), (Var-Q3, 3), (Var-Q4, 1), (Var-Q4, 4), (Var-Q5, 1), (Var-Q5, 5), (Var-Q6, 1), (Var-Q6, 6), (Var-Q7, 1), (Var-Q7, 7)])
+(True, [(Var-Q3, 2), (Var-Q3, 4), (Var-Q4, 3), (Var-Q4, 5), (Var-Q5, 3), (Var-Q5, 6), (Var-Q6, 3), (Var-Q6, 7), (Var-Q7, 3)])
+(True, [(Var-Q4, 6), (Var-Q5, 7), (Var-Q6, 2), (Var-Q6, 5), (Var-Q7, 5)])
+(True, [(Var-Q4, 2), (Var-Q5, 4), (Var-Q7, 4)])
+(True, [])
+(True, [(Var-Q7, 2)])
+(True, [])
