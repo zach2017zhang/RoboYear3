@@ -1,26 +1,26 @@
-Var--(0, 0)
-Var--(1, 0)
-Var--(0, 1)
-Var--(0, 2)
-Var--(0, 2)
-Var--(1, 0)
-Var--(0, 1)
-Var--(0, 2)
-Var--(0, 3)
-Var--(1, 3)
-Var--(1, 1)
-Var--(1, 2)
-Var--(2, 0)
-Var--(2, 1)
-Var--(3, 0)
-Var--(2, 1)
-Var--(3, 0)
-Var--(1, 2)
-Var--(2, 0)
-Var--(2, 1)
-Var--(3, 0)
-Var--(3, 1)
-Var--(2, 2)
-Var--(2, 3)
-Var--(3, 2)
-Var--(3, 3)
+Var--Var11
+Var--Var21
+Var--Var12
+Var--Var13
+Var--Var13
+Var--Var21
+Var--Var12
+Var--Var13
+Var--Var14
+Var--Var24
+Var--Var22
+Var--Var23
+Var--Var31
+Var--Var32
+Var--Var41
+Var--Var32
+Var--Var41
+Var--Var23
+Var--Var31
+Var--Var32
+Var--Var41
+Var--Var42
+Var--Var33
+Var--Var34
+Var--Var43
+Var--Var44
