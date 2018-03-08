@@ -15,6 +15,7 @@
 from util import manhattanDistance
 from game import Directions
 import random, util
+from math import sqrt
 
 from game import Agent
 
@@ -74,7 +75,47 @@ class ReflexAgent(Agent):
         newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
 
         "*** YOUR CODE HERE ***"
-        return successorGameState.getScore()
+        #print newPos
+        #print newFood
+        #print newGhostStates
+        #print newScaredTimes
+        #print successorGameState.getScore()
+        if successorGameState.isWin():
+            return 100000
+        if successorGameState.isLose():
+            return -100000
+        
+        #current score
+        score = 5*successorGameState.getScore()
+        
+        #ghost position
+        for ghostPosition in successorGameState.getGhostPositions():
+            if manhattanDistance(ghostPosition, newPos) < 2:
+                score -= 200
+            else:
+                score += sqrt(manhattanDistance(ghostPosition, newPos))
+        
+        #food position
+        foodDistance = min([manhattanDistance(foodPosition, newPos) for foodPosition in newFood.asList()])
+        score -= 3*foodDistance
+        if newPos in currentGameState.getFood().asList():
+            score += 20
+        
+        #capsule position
+        if not currentGameState.getCapsules() == []:
+            if min([manhattanDistance(capsulePosition, newPos) for capsulePosition in currentGameState.getCapsules()]) < 2:
+                score += 30
+            if newPos in currentGameState.getCapsules():
+                score += 20
+        
+        #get away from corners
+        score += 3*len(successorGameState.getLegalPacmanActions())
+        
+        #always move
+        if action == Directions.STOP:
+            score -= 10
+                    
+        return score
 
 def scoreEvaluationFunction(currentGameState):
     """
@@ -129,7 +170,47 @@ class MinimaxAgent(MultiAgentSearchAgent):
             Returns the total number of agents in the game
         """
         "*** YOUR CODE HERE ***"
+        return DFMinimax()[1]
+        
         util.raiseNotDefined()
+    
+    def DFMinimax(self):
+        if gameState.isWin() or gameState.isLose() or depth == 0:
+            return self.evaluationFunction(gameState), Directions.STOP
+        
+        legalActions = gameState.getLegalActions(agent_index)
+        
+        #max node depth -1
+        if agent_index == 0:
+            value = -(float("inf"))
+            bestAction = Directions.STOP
+            for action in legalActions:
+                actionValue = DFMinimax()[0]
+                if actionValue > value:
+                    bestAction = action
+                    value = actionValue
+            return value, bestAction
+        #min node
+        else:
+            if agent_index == gameState.getNumAgents() - 1
+                #depth -1
+                value = +(float("inf"))
+                bestAction = Directions.STOP
+                for action in legalActions:
+                    actionValue = DFMinimax()[0] #modify this
+                    if actionValue < value:
+                        bestAction = action
+                        value = actionValue
+                return value, bestAction
+            else:
+                value = +(float("inf"))
+                bestAction = Directions.STOP
+                for action in legalActions:
+                    actionValue = DFMinimax()[0] #modify this 
+                    if actionValue < value:
+                        bestAction = action
+                        value = actionValue
+                return value, bestAction
 
 class AlphaBetaAgent(MultiAgentSearchAgent):
     """
