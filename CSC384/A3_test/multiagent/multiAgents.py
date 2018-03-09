@@ -280,6 +280,39 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         return self.Expectimax(gameState, 0, self.depth)[1]
         util.raiseNotDefined()
 
+def helperEvaluation(gameState, agentIndex, curDepth,alpha, beta):
+    if gameState.isWin() or gameState.isLose() or curDepth == 0:
+        return gameState.getScore(), Directions.STOP, gameState.getScore()
+    legalActions = gameState.getLegalActions(agentIndex)
+    bestAction = Directions.STOP
+    if agentIndex == 0:
+        value = -(float("inf"))
+        for action in legalActions:
+            actionValue,notUsed,alphaValue = helperEvaluation(gameState.generateSuccessor(agentIndex, action),agentIndex+1,curDepth,alpha, beta)
+            if actionValue > value:
+                bestAction = action
+                value = actionValue
+            if alphaValue > alpha:
+                alpha = alphaValue
+            if alpha >= beta:
+                break
+        return value, bestAction, alpha
+    else:
+        value = float("inf")
+        for action in legalActions:
+            if agentIndex == (gameState.getNumAgents()-1):
+                actionValue,notUsed,betaValue = helperEvaluation(gameState.generateSuccessor(agentIndex, action),0,curDepth-1,alpha, beta)
+            else:
+                actionValue,notUsed,betaValue = helperEvaluation(gameState.generateSuccessor(agentIndex, action),agentIndex+1,curDepth,alpha, beta)
+            if actionValue < value:
+                bestAction = action
+                value = actionValue
+            if betaValue < beta:
+                beta = betaValue
+            if alpha >= beta:
+                break
+        return value, bestAction, beta
+
 def betterEvaluationFunction(currentGameState):
     """
       Your extreme ghost-hunting, pellet-nabbing, food-gobbling, unstoppable
@@ -288,7 +321,45 @@ def betterEvaluationFunction(currentGameState):
       DESCRIPTION: <write something here so we know what you did>
     """
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    #print helperEvaluation(currentGameState, 0, 2,-(float("inf")),float("inf"))[0]
+
+    # Useful information you can extract from a GameState (pacman.py)
+
+    newPos = currentGameState.getPacmanPosition()
+    
+    if currentGameState.isWin():
+        return float("inf")
+    if currentGameState.isLose():
+        return -(float("inf"))
+    
+    score = currentGameState.getScore()
+    
+    #food position
+    score -= 50*len(currentGameState.getFood().asList())
+    newFood = currentGameState.getFood()
+    for foodPosition in newFood.asList():
+        score -= sqrt(manhattanDistance(foodPosition, newPos))*20/len(currentGameState.getFood().asList())
+    #foodDistance = min([manhattanDistance(foodPosition, newPos) for foodPosition in newFood.asList()])
+    #score -= 4*foodDistance
+
+    #capsule position
+    score -= 2000*len(currentGameState.getCapsules())
+    if not currentGameState.getCapsules() == []:
+        capsuleDistance = min([manhattanDistance(capsulePosition, newPos) for capsulePosition in currentGameState.getCapsules()])
+        score -= 0.5*capsuleDistance
+    
+    #ghost position
+    ghostDistance = min([manhattanDistance(ghostPosition, newPos) for ghostPosition in currentGameState.getGhostPositions()])
+    if ghostDistance < 2:
+        score -= 40
+    else:
+        score += ghostDistance * 2
+    
+    #alphabeta
+    score += 3*helperEvaluation(currentGameState, 0, 1,-(float("inf")),float("inf"))[0]
+    
+    return score
+    #util.raiseNotDefined()
 
 # Abbreviation
 better = betterEvaluationFunction
