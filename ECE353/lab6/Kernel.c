@@ -1836,6 +1836,7 @@ code Kernel
         else
           newPCB.addrSpace.ClearWritable(i)
         endIf
+      endFor
       
       -- need to know where to start for the child
       oldUserPC = GetOldUserPCFromSystemStack()
