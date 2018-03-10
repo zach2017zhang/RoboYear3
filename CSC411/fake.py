@@ -69,57 +69,75 @@ def count(trainingSet, validationSet, testSet):
     
     return trainingRealCount,trainingFakeCount,validationRealCount,validationFakeCount,testRealCount,testFakeCount, trainingCount, validationCount, testCount
 
-def probability(trainingRealCount,trainingFakeCount, trainingCount, mReal, pHatReal, mFake, pHatFake):
+def probability(trainingRealCount,trainingFakeCount, trainingCount, m, pHat):
     trainingProbability = {'real': {}, 'fake': {}}
     for word in trainingCount['real'].keys():
-        trainingProbability['real'][word] = (trainingCount['real'][word]+mReal*pHatReal)/float(trainingRealCount+mReal)
+        trainingProbability['real'][word] = (trainingCount['real'][word]+m*pHat)/float(trainingRealCount+m)
     for word in trainingCount['fake'].keys():
-        trainingProbability['fake'][word] = (trainingCount['fake'][word]+mFake*pHatFake)/float(trainingFakeCount+mFake)
+        trainingProbability['fake'][word] = (trainingCount['fake'][word]+m*pHat)/float(trainingFakeCount+m)
     
     realProbability = float(trainingRealCount)/(trainingRealCount+trainingFakeCount)
     fakeProbability = float(trainingFakeCount)/(trainingRealCount+trainingFakeCount)
     
     return trainingProbability, realProbability, fakeProbability
-    
-                      
-        
-# Part 1
+
+def getAccuracy(trainingProbability,realProbability, fakeProbability, targetSet, m, pHat):
+    accuracy = 0
+    for rof in ['real', 'fake']:
+        for numNews in range(len(targetSet[rof])):
+            logProb = 0   
+            for word in trainingProbability['real'].keys():
+                if word in targetSet[rof][numNews].split(' '):
+                    logProb += log(trainingProbability['real'][word])
+                else:
+                    logProb += log(1-trainingProbability['real'][word])
+            for word in targetSet[rof][numNews].split(' '):
+                if not word in trainingProbability['real'].keys():
+                    logProb += log(pHat)
+            logProb += log(realProbability)
+            realProb = logProb
+
+            logProb = 0 
+            for word in trainingProbability['fake'].keys():
+                if word in targetSet[rof][numNews].split(' '):
+                    logProb += log(trainingProbability['fake'][word])
+                else:
+                    logProb += log(1-trainingProbability['fake'][word])
+            for word in targetSet[rof][numNews].split(' '):
+                if not word in trainingProbability['fake'].keys():
+                    logProb += log(pHat)
+            logProb += log(fakeProbability)
+            fakeProb = logProb
+            
+            if rof == 'real':
+                if realProb > fakeProb:
+                    accuracy += 1
+            else:
+                if realProb < fakeProb:
+                    accuracy += 1
+                    
+    return accuracy / (float(len(targetSet['fake']))+float(len(targetSet['real'])))
+
+# Part 2
 # -----------------------------------------------------------------------------
 def part2(seed = 0):
-    
+    np.random.seed(0)
+
     fakeNews, realNews = getNews()
     trainingSet, validationSet, testSet = dataSetSplit(fakeNews, realNews)
     trainingRealCount,trainingFakeCount,validationRealCount, \
     validationFakeCount,testRealCount,testFakeCount, trainingCount, \
     validationCount, testCount = count(trainingSet, validationSet, testSet)
     
-    #parameters
-    mReal = 1
-    pHatReal = 0.1
-    mFake = 1
-    pHatFake = 0.1
-    
+    m = 0.5
+    pHat = 0.0005
     trainingProbability, realProbability, fakeProbability = \
-    probability(trainingRealCount,trainingFakeCount, trainingCount, mReal, pHatReal, mFake, pHatFake)
+    probability(trainingRealCount,trainingFakeCount, trainingCount, m,pHat)
+
+    print getAccuracy(trainingProbability,realProbability, fakeProbability, validationSet, m, pHat)
+    print getAccuracy(trainingProbability,realProbability, fakeProbability, testSet, m, pHat)
+    print getAccuracy(trainingProbability,realProbability, fakeProbability, trainingSet, m, pHat)
     
-    logProb = 0   
-    for word in trainingProbability['real'].keys():
-        if word in validationSet['real'][0].split(' '):
-            logProb += log(trainingProbability['real'][word])
-        #else:
-            #logProb += log(1-trainingProbability['real'][word])
-    
-    for word in validationSet['real'][0].split(' '):
-        if not word in  trainingProbability['real'].keys():
-            logProb += log(pHatReal)
-            
-    logProb += log(realProbability)
-    print exp(logProb)
-        
-    
-    
-# Main function
-# -----------------------------------------------------------------------------
 if __name__ == "__main__":
     #Important Note: Please uncomment the following line when using an IDE!
     os.chdir(os.path.dirname(__file__))
