@@ -1066,12 +1066,12 @@ code Kernel
         oldIntStatus: int
       currentThread.myProcess.exitStatus = exitStatus
       oldIntStatus = SetInterruptsTo (DISABLED)
-      currentThread.myProcess.myThread = null
-      currentThread.myProcess = null
       currentThread.isUserThread = false
       oldIntStatus = SetInterruptsTo (oldIntStatus)
       frameManager.ReturnAllFrames(&(currentThread.myProcess.addrSpace))
       processManager.TurnIntoZombie(currentThread.myProcess)
+      currentThread.myProcess.myThread = null
+      currentThread.myProcess = null
       ThreadFinish()
     endFunction
 
