@@ -956,19 +956,18 @@ code Kernel
         -- This method returns a new ProcessControlBlock; it will wait
         -- until one is available.
         --
-          -- NOT IMPLEMENTED
-        var
-          NewProcessPtr: ptr to ProcessControlBlock
-          processManagerLock.Lock()
-          while freeList.IsEmpty()
-            aProcessBecameFree.Wait(&processManagerLock)
-          endWhile
-          NewProcessPtr = freeList.Remove()
-          (*NewProcessPtr).pid = nextPid
-          nextPid = nextPid + 1
-          (*NewProcessPtr).status = ACTIVE
-          processManagerLock.Unlock()
-          return NewProcessPtr
+				var
+					nextProcessPtr: ptr to ProcessControlBlock
+				processManagerLock.Lock()
+				while(freeList.IsEmpty())
+					aProcessBecameFree.Wait(&processManagerLock)
+				endWhile
+				nextProcessPtr = freeList.Remove()
+				nextPid = nextPid + 1
+				(*nextProcessPtr).pid = nextPid
+				(*nextProcessPtr).status = ACTIVE
+				processManagerLock.Unlock()
+        return nextProcessPtr
         endMethod
 
       ----------  ProcessManager . TurnIntoZombie  ----------
@@ -1034,13 +1033,11 @@ code Kernel
         --
         -- This method is passed a ptr to a Process;  It moves it
         -- to the FREE list.
-        --
-          -- NOT IMPLEMENTED
-          processManagerLock.Lock()
-          (*p).status = FREE
-          freeList.AddToEnd(p)
-          aProcessBecameFree.Signal(&processManagerLock)
-          processManagerLock.Unlock()
+				processManagerLock.Lock()
+				(*p).status = FREE
+				freeList.AddToEnd(p)
+				aProcessBecameFree.Signal(&processManagerLock)
+				processManagerLock.Unlock()
         endMethod
 
     endBehavior
