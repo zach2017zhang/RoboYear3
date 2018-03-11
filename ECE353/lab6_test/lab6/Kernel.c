@@ -964,8 +964,8 @@ code Kernel
             aProcessBecameFree.Wait(&processManagerLock)
           endWhile
           NewProcessPtr = freeList.Remove()
-          (*NewProcessPtr).pid = nextPid
           nextPid = nextPid + 1
+          (*NewProcessPtr).pid = nextPid
           (*NewProcessPtr).status = ACTIVE
           processManagerLock.Unlock()
           return NewProcessPtr
