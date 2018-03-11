@@ -3,52 +3,36 @@ code Kernel
   -- Abdurrahman Qureshi
 
 
-	function InitFirstProcess ()
-		var
-			threadPtr: ptr to Thread		
-		threadPtr = threadManager.GetANewThread()
-		(*threadPtr).Init("UserProgram")
-		(*threadPtr).Fork(StartUserProcess, 0)
-	endFunction
+-----------------------------  InitFirstProcess  ---------------------------------
+  function InitFirstProcess ()
+    var
+      threadPtr : ptr to Thread
+    threadPtr = threadManager.GetANewThread()
+    (*threadPtr).Init("UserProgram")
+    (*threadPtr).Fork(StartUserProcess, 0)
+  endFunction
 
-	function StartUserProcess (arg: int)
-		var
-			pcb: ptr to ProcessControlBlock
-			openFilePtr: ptr to OpenFile
-			entryPoint: int
-			initUserStackTop: int
-			initSystemStackTop: int
-			junk: int
-
-
-		pcb = processManager.GetANewProcess()
-
-		pcb.myThread = currentThread
-
-		currentThread.myProcess = pcb
-
-		openFilePtr = fileManager.Open("TestProgram3")
-
-		entryPoint = (*openFilePtr).LoadExecutable(&(pcb.addrSpace))
-
-		fileManager.Close(openFilePtr)
-
-		initUserStackTop = pcb.addrSpace.numberOfPages*PAGE_SIZE 
-
-		initSystemStackTop = (& currentThread.systemStack[SYSTEM_STACK_SIZE-1]) asInteger
-
-		
-		junk = SetInterruptsTo (DISABLED)
-
-		pcb.addrSpace.SetToThisPageTable()
-
-		currentThread.isUserThread = true
-
-		print("Becoming User Thread")
-
-		BecomeUserThread(initUserStackTop, entryPoint, initSystemStackTop)
-
-	endFunction
+  function StartUserProcess (arg: int)
+    var
+      pcbPtr: ptr to ProcessControlBlock
+      openFilePtr: ptr to OpenFile
+      entryPoint: int
+      initUserStackTop: int
+      initSystemStackTop: int
+      junk: int
+    pcbPtr = processManager.GetANewProcess()
+    pcbPtr.myThread = currentThread
+    currentThread.myProcess = pcbPtr
+    openFilePtr = fileManager.Open("TestProgram3")
+    entryPoint = (*openFilePtr).LoadExecutable(&(pcbPtr.addrSpace))
+    fileManager.Close(openFilePtr)
+    initUserStackTop = pcbPtr.addrSpace.numberOfPages*PAGE_SIZE
+    initSystemStackTop = (& currentThread.systemStack[SYSTEM_STACK_SIZE-1]) asInteger
+    junk = SetInterruptsTo (DISABLED)
+    pcbPtr.addrSpace.SetToThisPageTable()
+    currentThread.isUserThread = true
+    BecomeUserThread(initUserStackTop, entryPoint, initSystemStackTop)
+  endFunction
 
 
 -----------------------------  InitializeScheduler  ---------------------------------
