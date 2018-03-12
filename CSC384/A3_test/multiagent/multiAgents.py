@@ -75,19 +75,14 @@ class ReflexAgent(Agent):
         newScaredTimes = [ghostState.scaredTimer for ghostState in newGhostStates]
 
         "*** YOUR CODE HERE ***"
-        #print newPos
-        #print newFood
-        #print newGhostStates
-        #print newScaredTimes
-        #print successorGameState.getScore()
         if successorGameState.isWin():
             return 100000
         if successorGameState.isLose():
             return -100000
-        
+            
         #current score
         score = 5*successorGameState.getScore()
-        
+                
         #ghost position
         for ghostPosition in successorGameState.getGhostPositions():
             if manhattanDistance(ghostPosition, newPos) < 2:
@@ -278,7 +273,7 @@ class ExpectimaxAgent(MultiAgentSearchAgent):
         """
         "*** YOUR CODE HERE ***"
         return self.Expectimax(gameState, 0, self.depth)[1]
-        util.raiseNotDefined()
+        #util.raiseNotDefined()
 
 def helperEvaluation(gameState, agentIndex, curDepth,alpha, beta):
     if gameState.isWin() or gameState.isLose() or curDepth == 0:
@@ -321,10 +316,6 @@ def betterEvaluationFunction(currentGameState):
       DESCRIPTION: <write something here so we know what you did>
     """
     "*** YOUR CODE HERE ***"
-    #print helperEvaluation(currentGameState, 0, 2,-(float("inf")),float("inf"))[0]
-
-    # Useful information you can extract from a GameState (pacman.py)
-
     newPos = currentGameState.getPacmanPosition()
     
     if currentGameState.isWin():
