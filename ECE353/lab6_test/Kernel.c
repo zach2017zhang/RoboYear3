@@ -1153,17 +1153,9 @@ code Kernel
         endMethod
 
       method GetAFrame2 () returns int
-        -- Allocate a single frame and return its physical address.  If no frames
-        -- are currently available, wait until the request can be completed.
-        --
-          var f, frameAddr: int
+          var frameAddr: int
 
-          -- Find a free frame and allocate it...
-          f = framesInUse.FindZeroAndSet ()
-
-          -- Compute and return the physical address of the frame...
-          frameAddr = PHYSICAL_ADDRESS_OF_FIRST_PAGE_FRAME + (f * PAGE_SIZE)
-          -- printHexVar ("GetAFrame returning frameAddr", frameAddr)
+          frameAddr = PHYSICAL_ADDRESS_OF_FIRST_PAGE_FRAME + ((framesInUse.FindZeroAndSet ()) * PAGE_SIZE)
           return frameAddr
         endMethod
 
