@@ -728,15 +728,13 @@ code Kernel
           freeList = new List[Thread]
           threadManagerLock = new Mutex
           aThreadBecameFree = new Condition
-          threadManagerLock.Init()
-          aThreadBecameFree.Init()
           for i = 0 to MAX_NUMBER_OF_PROCESSES-1 by 1
             threadTable[i].Init("Thread")
             threadTable[i].status = UNUSED
             freeList.AddToEnd(&threadTable[i])
           endFor
-
-          -- NOT IMPLEMENTED
+          threadManagerLock.Init()
+          aThreadBecameFree.Init()
         endMethod
 
       ----------  ThreadManager . Print  ----------
