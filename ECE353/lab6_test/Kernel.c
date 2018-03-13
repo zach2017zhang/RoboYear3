@@ -882,22 +882,24 @@ code Kernel
         --
         -- This method is called once at kernel startup time to initialize
         -- the one and only "processManager" object.  
+        --
+        -- NOT IMPLEMENTED
         var
           i: int
-        freeList = new List[ProcessControlBlock]
-        processTable = new array of ProcessControlBlock {MAX_NUMBER_OF_PROCESSES of new ProcessControlBlock}
-        processManagerLock = new Mutex
-        aProcessBecameFree = new Condition
-        aProcessDied = new Condition
-        for i = 0 to MAX_NUMBER_OF_PROCESSES-1 by 1
-					processTable[i].Init()
-          freeList.AddToEnd(&processTable[i])
-          processTable[i].status = FREE
-        endFor
-		nextPid = 0
-        processManagerLock.Init()
-        aProcessBecameFree.Init()
-        aProcessDied.Init()
+          processTable = new array of ProcessControlBlock {MAX_NUMBER_OF_PROCESSES of new ProcessControlBlock}
+          processManagerLock = new Mutex
+          aProcessBecameFree = new Condition
+          aProcessDied = new Condition
+          freeList = new List[ProcessControlBlock]
+          for i = 0 to MAX_NUMBER_OF_PROCESSES-1 by 1
+            processTable[i].Init()
+            processTable[i].status = FREE
+            freeList.AddToEnd(&processTable[i])
+          endFor
+          nextPid = 0
+          processManagerLock.Init()
+          aProcessBecameFree.Init()
+          aProcessDied.Init()
         endMethod
 
       ----------  ProcessManager . Print  ----------
@@ -952,18 +954,19 @@ code Kernel
         -- This method returns a new ProcessControlBlock; it will wait
         -- until one is available.
         --
-				var
-					nextProcessPtr: ptr to ProcessControlBlock
-				processManagerLock.Lock()
-				while(freeList.IsEmpty())
-					aProcessBecameFree.Wait(&processManagerLock)
-				endWhile
-				nextProcessPtr = freeList.Remove()
-				nextPid = nextPid + 1
-				(*nextProcessPtr).pid = nextPid
-				(*nextProcessPtr).status = ACTIVE
-				processManagerLock.Unlock()
-        return nextProcessPtr
+          -- NOT IMPLEMENTED
+        var
+          NewProcessPtr: ptr to ProcessControlBlock
+          processManagerLock.Lock()
+          while freeList.IsEmpty()
+            aProcessBecameFree.Wait(&processManagerLock)
+          endWhile
+          NewProcessPtr = freeList.Remove()
+          nextPid = nextPid + 1
+          (*NewProcessPtr).pid = nextPid
+          (*NewProcessPtr).status = ACTIVE
+          processManagerLock.Unlock()
+          return NewProcessPtr
         endMethod
 
       ----------  ProcessManager . TurnIntoZombie  ----------
