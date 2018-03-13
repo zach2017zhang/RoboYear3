@@ -895,10 +895,10 @@ code Kernel
             processTable[i].status = FREE
             freeList.AddToEnd(&processTable[i])
           endFor
+          nextPid = 0
           processManagerLock.Init()
           aProcessBecameFree.Init()
           aProcessDied.Init()
-          -- nextPid = 0
         endMethod
 
       ----------  ProcessManager . Print  ----------
