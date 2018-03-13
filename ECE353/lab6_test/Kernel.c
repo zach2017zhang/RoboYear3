@@ -1170,7 +1170,7 @@ code Kernel
           newFramesAvailable.Wait (&frameManagerLock)
         endWhile
 				for i = 0 to numFramesNeeded - 1
-					frameAddr = PHYSICAL_ADDRESS_OF_FIRST_PAGE_FRAME + ((framesInUse.FindZeroAndSet ()) * PAGE_SIZE)
+					frameAddr = self.GetAFrame2 ()
 					(*aPageTable).SetFrameAddr(i, frameAddr)
 				endFor
 				numberFreeFrames = numberFreeFrames - numFramesNeeded
