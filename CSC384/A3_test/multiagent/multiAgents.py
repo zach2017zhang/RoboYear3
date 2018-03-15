@@ -313,7 +313,8 @@ def betterEvaluationFunction(currentGameState):
       Your extreme ghost-hunting, pellet-nabbing, food-gobbling, unstoppable
       evaluation function (question 5).
 
-      DESCRIPTION: <write something here so we know what you did>
+      DESCRIPTION:
+        Consider the food, capsule and ghost position. Also use alpha beta pruning to help evaluating near future states.
     """
     "*** YOUR CODE HERE ***"
     newPos = currentGameState.getPacmanPosition()
