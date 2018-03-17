@@ -1585,13 +1585,7 @@ code Kernel
       if diskDriver.semToSignalOnCompletion
         diskDriver.semToSignalOnCompletion.Up()
       endIf
-/*
-      currentInterruptStatus = DISABLED
-      -- print ("DiskInterruptHandler invoked!\n")
-      if diskDriver.semToSignalOnCompletion
-        diskDriver.semToSignalOnCompletion.Up()
-      endIf
-*/
+      
     endFunction
 
 -----------------------------  SerialInterruptHandler  --------------------------

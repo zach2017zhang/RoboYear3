@@ -40,8 +40,8 @@ code TestProgram4
       -- WriteTest6 ()
       -- OpenTest3 ()
       -- ExecTest1 ()
-      -- ExecTest2 ()
-      ExecTest3 ()
+      ExecTest2 ()
+      -- ExecTest3 ()
 
       Sys_Exit (0)
     endFunction
