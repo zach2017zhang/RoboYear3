@@ -25,8 +25,8 @@ code TestProgram4
 
       -- OpenTest1 ()
       -- OpenTest2 ()
-      OpenCloseTest ()
-      -- CloseTest ()
+      -- OpenCloseTest ()
+      CloseTest ()
       -- ReadTest1 ()
       -- ReadTest2 ()
       -- SeekTest ()
