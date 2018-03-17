@@ -2,7 +2,6 @@ code Kernel
 
   -- Abdurrahman Qureshi
 
-
 -----------------------------  InitFirstProcess  ---------------------------------
   function InitFirstProcess ()
     var

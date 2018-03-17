@@ -32,6 +32,7 @@ code Kernel
     currentThread.isUserThread = true
     BecomeUserThread(initUserStackTop, entryPoint, initSystemStackTop)
   endFunction
+  
 
 -----------------------------  InitializeScheduler  ---------------------------------
 
@@ -811,10 +812,10 @@ code Kernel
           addrSpace = new AddrSpace
           addrSpace.Init ()
 -- Uncomment this code later...
-/*
+
           fileDescriptor = new array of ptr to OpenFile
                       { MAX_FILES_PER_PROCESS of null }
-*/
+
         endMethod
 
       ----------  ProcessControlBlock . Print  ----------

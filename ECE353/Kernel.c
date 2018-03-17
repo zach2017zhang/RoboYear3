@@ -1,6 +1,7 @@
 code Kernel
 
-  -- <Yuchen Wu>
+  -- Abdurrahman Qureshi
+
 
 -----------------------------  InitFirstProcess  ---------------------------------
   function InitFirstProcess ()
@@ -32,6 +33,7 @@ code Kernel
     currentThread.isUserThread = true
     BecomeUserThread(initUserStackTop, entryPoint, initSystemStackTop)
   endFunction
+
 
 -----------------------------  InitializeScheduler  ---------------------------------
 
@@ -810,11 +812,8 @@ code Kernel
           status = FREE
           addrSpace = new AddrSpace
           addrSpace.Init ()
--- Uncomment this code later...
-/*
           fileDescriptor = new array of ptr to OpenFile
                       { MAX_FILES_PER_PROCESS of null }
-*/
         endMethod
 
       ----------  ProcessControlBlock . Print  ----------
@@ -825,7 +824,8 @@ code Kernel
         --
         -- var i: int
           self.PrintShort ()
-          addrSpace.Print ()
+-- uncomment this later as well
+          -- addrSpace.Print ()
           print ("    myThread = ")
           ThreadPrintShort (myThread)
 -- Uncomment this code later...
@@ -1038,7 +1038,6 @@ code Kernel
           processManagerLock.Unlock()
         endMethod
 
-
     endBehavior
 
 -----------------------------  PrintObjectAddr  ---------------------------------
@@ -1058,19 +1057,25 @@ code Kernel
     -- This routine is called when a process is to be terminated.  It will
     -- free the resources held by this process and will terminate the
     -- current thread.
-    --
-      -- FatalError ("ProcessFinish is not implemented")
-      var
-        oldIntStatus: int
-      currentThread.myProcess.exitStatus = exitStatus
-      oldIntStatus = SetInterruptsTo (DISABLED)
-      currentThread.isUserThread = false
-      oldIntStatus = SetInterruptsTo (oldIntStatus)
-      frameManager.ReturnAllFrames(&(currentThread.myProcess.addrSpace))
-      processManager.TurnIntoZombie(currentThread.myProcess)
-      currentThread.myProcess.myThread = null
-      currentThread.myProcess = null
-      ThreadFinish()
+ 		var
+			oldIntStatus: int
+			i: int
+		currentThread.myProcess.exitStatus = exitStatus
+		oldIntStatus = SetInterruptsTo (DISABLED)
+		currentThread.isUserThread = false
+		oldIntStatus = SetInterruptsTo (oldIntStatus)
+		-- clean up resources
+		frameManager.ReturnAllFrames(&(currentThread.myProcess.addrSpace))
+		processManager.TurnIntoZombie(currentThread.myProcess)
+		for i = 0 to MAX_FILES_PER_PROCESS-1
+			if currentThread.myProcess.fileDescriptor[i] != null
+				fileManager.Close(currentThread.myProcess.fileDescriptor[i])
+				currentThread.myProcess.fileDescriptor[i] = null
+			endIf
+		endFor
+		currentThread.myProcess.myThread = null
+		currentThread.myProcess = null
+		ThreadFinish()
     endFunction
 
 -----------------------------  FrameManager  ---------------------------------
@@ -1191,7 +1196,7 @@ code Kernel
         endMethod
 
     endBehavior
-
+    
 -----------------------------  AddrSpace  ---------------------------------
 
   behavior AddrSpace
@@ -1578,19 +1583,14 @@ code Kernel
     -- for the duration of its execution.
     --
 -- Uncomment this code later...
-      -- FatalError ("DISK INTERRUPTS NOT EXPECTED IN PROJECT 4")
+      --FatalError ("DISK INTERRUPTS NOT EXPECTED IN PROJECT 4")
+
       currentInterruptStatus = DISABLED
       -- print ("DiskInterruptHandler invoked!\n")
       if diskDriver.semToSignalOnCompletion
         diskDriver.semToSignalOnCompletion.Up()
       endIf
-/*
-      currentInterruptStatus = DISABLED
-      -- print ("DiskInterruptHandler invoked!\n")
-      if diskDriver.semToSignalOnCompletion
-        diskDriver.semToSignalOnCompletion.Up()
-      endIf
-*/
+
     endFunction
 
 -----------------------------  SerialInterruptHandler  --------------------------
@@ -2644,6 +2644,9 @@ code Kernel
         -- This method writes out the buffer, if it is dirty.  This method
         -- assumes the caller already holds the fileManagerLock.
         --
+			if open==null
+				print("openisnull")
+			endIf
           if open.fcb.bufferIsDirty
             if open.fcb.relativeSectorInBuffer < 0
               FatalError ("FileManager.Flush: buffer is dirty but relativeSectorInBuffer =  -1")
