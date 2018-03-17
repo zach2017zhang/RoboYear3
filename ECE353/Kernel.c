@@ -810,8 +810,11 @@ code Kernel
           status = FREE
           addrSpace = new AddrSpace
           addrSpace.Init ()
+-- Uncomment this code later...
+/*
           fileDescriptor = new array of ptr to OpenFile
                       { MAX_FILES_PER_PROCESS of null }
+*/
         endMethod
 
       ----------  ProcessControlBlock . Print  ----------
@@ -822,8 +825,7 @@ code Kernel
         --
         -- var i: int
           self.PrintShort ()
--- uncomment this later as well
-          -- addrSpace.Print ()
+          addrSpace.Print ()
           print ("    myThread = ")
           ThreadPrintShort (myThread)
 -- Uncomment this code later...
@@ -1036,6 +1038,7 @@ code Kernel
           processManagerLock.Unlock()
         endMethod
 
+
     endBehavior
 
 -----------------------------  PrintObjectAddr  ---------------------------------
@@ -1121,6 +1124,7 @@ code Kernel
       ----------  FrameManager . GetAFrame  ----------
 
       method GetAFrame () returns int
+        --
         -- Allocate a single frame and return its physical address.  If no frames
         -- are currently available, wait until the request can be completed.
         --
@@ -1140,21 +1144,6 @@ code Kernel
 
           -- Unlock...
           frameManagerLock.Unlock ()
-
-          -- Compute and return the physical address of the frame...
-          frameAddr = PHYSICAL_ADDRESS_OF_FIRST_PAGE_FRAME + (f * PAGE_SIZE)
-          -- printHexVar ("GetAFrame returning frameAddr", frameAddr)
-          return frameAddr
-        endMethod
-
-      method GetAFrame2 () returns int
-        -- Allocate a single frame and return its physical address.  If no frames
-        -- are currently available, wait until the request can be completed.
-        --
-          var f, frameAddr: int
-
-          -- Find a free frame and allocate it...
-          f = framesInUse.FindZeroAndSet ()
 
           -- Compute and return the physical address of the frame...
           frameAddr = PHYSICAL_ADDRESS_OF_FIRST_PAGE_FRAME + (f * PAGE_SIZE)
@@ -1589,14 +1578,19 @@ code Kernel
     -- for the duration of its execution.
     --
 -- Uncomment this code later...
-      --FatalError ("DISK INTERRUPTS NOT EXPECTED IN PROJECT 4")
-
+      -- FatalError ("DISK INTERRUPTS NOT EXPECTED IN PROJECT 4")
       currentInterruptStatus = DISABLED
       -- print ("DiskInterruptHandler invoked!\n")
       if diskDriver.semToSignalOnCompletion
         diskDriver.semToSignalOnCompletion.Up()
       endIf
-
+/*
+      currentInterruptStatus = DISABLED
+      -- print ("DiskInterruptHandler invoked!\n")
+      if diskDriver.semToSignalOnCompletion
+        diskDriver.semToSignalOnCompletion.Up()
+      endIf
+*/
     endFunction
 
 -----------------------------  SerialInterruptHandler  --------------------------
