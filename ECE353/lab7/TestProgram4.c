@@ -38,8 +38,8 @@ code TestProgram4
       -- ReadTest3 ()
       -- ReadTest4 ()
       -- WriteTest6 ()
-    OpenTest3 ()
-      -- ExecTest1 ()
+      -- OpenTest3 ()
+      ExecTest1 ()
       -- ExecTest2 ()
       -- ExecTest3 ()
 
