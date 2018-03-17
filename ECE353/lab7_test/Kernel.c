@@ -1,37 +1,55 @@
 code Kernel
 
-  -- <Yuchen Wu>
+  -- Abdurrahman Qureshi
 
------------------------------  InitFirstProcess  ---------------------------------
-  function InitFirstProcess ()
-    var
-      threadPtr : ptr to Thread
-    threadPtr = threadManager.GetANewThread()
-    (*threadPtr).Init("UserProgram")
-    (*threadPtr).Fork(StartUserProcess, 0)
-  endFunction
 
-  function StartUserProcess (arg: int)
-    var
-      pcbPtr: ptr to ProcessControlBlock
-      openFilePtr: ptr to OpenFile
-      entryPoint: int
-      initUserStackTop: int
-      initSystemStackTop: int
-      junk: int
-    pcbPtr = processManager.GetANewProcess()
-    pcbPtr.myThread = currentThread
-    currentThread.myProcess = pcbPtr
-    openFilePtr = fileManager.Open("TestProgram4")
-    entryPoint = (*openFilePtr).LoadExecutable(&(pcbPtr.addrSpace))
-    fileManager.Close(openFilePtr)
-    initUserStackTop = pcbPtr.addrSpace.numberOfPages*PAGE_SIZE
-    initSystemStackTop = (& currentThread.systemStack[SYSTEM_STACK_SIZE-1]) asInteger
-    junk = SetInterruptsTo (DISABLED)
-    pcbPtr.addrSpace.SetToThisPageTable()
-    currentThread.isUserThread = true
-    BecomeUserThread(initUserStackTop, entryPoint, initSystemStackTop)
-  endFunction
+	function InitFirstProcess ()
+		var
+			threadPtr: ptr to Thread		
+		threadPtr = threadManager.GetANewThread()
+		(*threadPtr).Init("UserProgram")
+		(*threadPtr).Fork(StartUserProcess, 0)
+	endFunction
+
+	function StartUserProcess (arg: int)
+		var
+			pcb: ptr to ProcessControlBlock
+			openFilePtr: ptr to OpenFile
+			entryPoint: int
+			initUserStackTop: int
+			initSystemStackTop: int
+			junk: int
+
+
+		pcb = processManager.GetANewProcess()
+
+		pcb.myThread = currentThread
+
+		currentThread.myProcess = pcb
+
+		openFilePtr = fileManager.Open("TestProgram4")
+
+		entryPoint = (*openFilePtr).LoadExecutable(&(pcb.addrSpace))
+
+		fileManager.Close(openFilePtr)
+
+		initUserStackTop = pcb.addrSpace.numberOfPages*PAGE_SIZE 
+
+		initSystemStackTop = (& currentThread.systemStack[SYSTEM_STACK_SIZE-1]) asInteger
+
+		
+		junk = SetInterruptsTo (DISABLED)
+
+		pcb.addrSpace.SetToThisPageTable()
+
+		currentThread.isUserThread = true
+
+		print("Becoming User Thread")
+
+		BecomeUserThread(initUserStackTop, entryPoint, initSystemStackTop)
+
+	endFunction
+
 
 -----------------------------  InitializeScheduler  ---------------------------------
 
@@ -720,21 +738,19 @@ code Kernel
         --
         -- This method is called once at kernel startup time to initialize
         -- the one and only "ThreadManager" object.
-        -- 
-        var
-          i: int
-          print ("Initializing Thread Manager...\n")
-          threadTable = new array of Thread {MAX_NUMBER_OF_PROCESSES of new Thread}
-          freeList = new List[Thread]
-          threadManagerLock = new Mutex
-          aThreadBecameFree = new Condition
-          for i = 0 to MAX_NUMBER_OF_PROCESSES-1 by 1
-            threadTable[i].Init("Thread")
-            threadTable[i].status = UNUSED
-            freeList.AddToEnd(&threadTable[i])
-          endFor
-          threadManagerLock.Init()
-          aThreadBecameFree.Init()
+			var
+				i: int
+			threadTable = new array of Thread {MAX_NUMBER_OF_PROCESSES of new Thread}
+			freeList = new List[Thread]
+			threadManagerLock = new Mutex
+			aThreadIsAvailable = new Condition
+			for i = 0 to MAX_NUMBER_OF_PROCESSES-1 by 1
+				threadTable[i].Init("ThreadNameHere")
+				threadTable[i].status = UNUSED
+				freeList.AddToEnd(&threadTable[i])
+			endFor
+			threadManagerLock.Init()
+			aThreadIsAvailable.Init()
         endMethod
 
       ----------  ThreadManager . Print  ----------
@@ -766,18 +782,16 @@ code Kernel
         -- 
         -- This method returns a new Thread; it will wait
         -- until one is available.
-        -- 
-          -- NOT IMPLEMENTED
-        var
-          NewThreadPtr: ptr to Thread
-        threadManagerLock.Lock()
-        while freeList.IsEmpty()
-          aThreadBecameFree.Wait(&threadManagerLock)
-        endWhile
-        NewThreadPtr = freeList.Remove()
-        (*NewThreadPtr).status = JUST_CREATED
-        threadManagerLock.Unlock()
-          return NewThreadPtr
+			var
+				availableThreadPtr: ptr to Thread
+			threadManagerLock.Lock()
+			while freeList.IsEmpty()
+				aThreadIsAvailable.Wait(&threadManagerLock)
+			endWhile
+			availableThreadPtr = freeList.Remove()
+			(*availableThreadPtr).status = JUST_CREATED
+			threadManagerLock.Unlock()
+			return availableThreadPtr
         endMethod
 
       ----------  ThreadManager . FreeThread  ----------
@@ -786,13 +800,11 @@ code Kernel
         -- 
         -- This method is passed a ptr to a Thread;  It moves it
         -- to the FREE list.
-        -- 
-          -- NOT IMPLEMENTED
-          threadManagerLock.Lock()
-          (*th).status = UNUSED
-          freeList.AddToEnd(th)
-          aThreadBecameFree.Signal(&threadManagerLock)
-          threadManagerLock.Unlock()
+			threadManagerLock.Lock()
+			(*th).status = UNUSED
+			freeList.AddToEnd(th)
+			aThreadIsAvailable.Signal(&threadManagerLock)
+			threadManagerLock.Unlock()
         endMethod
 
     endBehavior
@@ -810,11 +822,8 @@ code Kernel
           status = FREE
           addrSpace = new AddrSpace
           addrSpace.Init ()
--- Uncomment this code later...
-/*
           fileDescriptor = new array of ptr to OpenFile
                       { MAX_FILES_PER_PROCESS of null }
-*/
         endMethod
 
       ----------  ProcessControlBlock . Print  ----------
@@ -825,7 +834,8 @@ code Kernel
         --
         -- var i: int
           self.PrintShort ()
-          addrSpace.Print ()
+-- uncomment this later as well
+          -- addrSpace.Print ()
           print ("    myThread = ")
           ThreadPrintShort (myThread)
 -- Uncomment this code later...
@@ -879,24 +889,22 @@ code Kernel
         --
         -- This method is called once at kernel startup time to initialize
         -- the one and only "processManager" object.  
-        --
-        -- NOT IMPLEMENTED
         var
           i: int
-          processTable = new array of ProcessControlBlock {MAX_NUMBER_OF_PROCESSES of new ProcessControlBlock}
-          processManagerLock = new Mutex
-          aProcessBecameFree = new Condition
-          aProcessDied = new Condition
-          freeList = new List[ProcessControlBlock]
-          for i = 0 to MAX_NUMBER_OF_PROCESSES-1 by 1
-            processTable[i].Init()
-            processTable[i].status = FREE
-            freeList.AddToEnd(&processTable[i])
-          endFor
-          nextPid = 0
-          processManagerLock.Init()
-          aProcessBecameFree.Init()
-          aProcessDied.Init()
+        freeList = new List[ProcessControlBlock]
+        processTable = new array of ProcessControlBlock {MAX_NUMBER_OF_PROCESSES of new ProcessControlBlock}
+        processManagerLock = new Mutex
+        aProcessBecameFree = new Condition
+        aProcessDied = new Condition
+        for i = 0 to MAX_NUMBER_OF_PROCESSES-1 by 1
+					processTable[i].Init()
+          freeList.AddToEnd(&processTable[i])
+          processTable[i].status = FREE
+        endFor
+		nextPid = 0
+        processManagerLock.Init()
+        aProcessBecameFree.Init()
+        aProcessDied.Init()
         endMethod
 
       ----------  ProcessManager . Print  ----------
@@ -951,77 +959,74 @@ code Kernel
         -- This method returns a new ProcessControlBlock; it will wait
         -- until one is available.
         --
-          -- NOT IMPLEMENTED
-        var
-          NewProcessPtr: ptr to ProcessControlBlock
-          processManagerLock.Lock()
-          while freeList.IsEmpty()
-            aProcessBecameFree.Wait(&processManagerLock)
-          endWhile
-          NewProcessPtr = freeList.Remove()
-          nextPid = nextPid + 1
-          (*NewProcessPtr).pid = nextPid
-          (*NewProcessPtr).status = ACTIVE
-          processManagerLock.Unlock()
-          return NewProcessPtr
+				var
+					nextProcessPtr: ptr to ProcessControlBlock
+				processManagerLock.Lock()
+				while(freeList.IsEmpty())
+					aProcessBecameFree.Wait(&processManagerLock)
+				endWhile
+				nextProcessPtr = freeList.Remove()
+				nextPid = nextPid + 1
+				(*nextProcessPtr).pid = nextPid
+				(*nextProcessPtr).status = ACTIVE
+				processManagerLock.Unlock()
+        return nextProcessPtr
         endMethod
-        
+
       ----------  ProcessManager . TurnIntoZombie  ----------
 
       method TurnIntoZombie (p: ptr to ProcessControlBlock)
-        var
-          i: int
-          parentPcb: ptr to ProcessControlBlock
-          
-          processManager.processManagerLock.Lock()
-          
-          -- deal with children
-          for i = 0 to MAX_NUMBER_OF_PROCESSES-1 by 1
-            if processManager.processTable[i].status == ZOMBIE && processManager.processTable[i].parentsPid == p.pid
-              processManager.processTable[i].status = FREE	
-              processManager.freeList.AddToEnd(&processManager.processTable[i])
-              processManager.aProcessBecameFree.Signal(&(processManager.processManagerLock))
-            endIf
-          endFor
-          
-          -- identify the parent and deal with the current process
-          for i = 0 to MAX_NUMBER_OF_PROCESSES-1 by 1
-            if processManager.processTable[i].pid == p.parentsPid -- locate parent while dealing with children
-              parentPcb = &(processManager.processTable[i])
-            endIf
-          endFor
-          if parentPcb != null && parentPcb.status == ACTIVE
-            p.status = ZOMBIE
-            processManager.aProcessDied.Broadcast(&(processManager.processManagerLock))
-          else
-            p.status = FREE
-            processManager.freeList.AddToEnd(p)
-            processManager.aProcessBecameFree.Signal(&(processManager.processManagerLock))	
-          endIf       
-          
-          processManager.processManagerLock.Unlock() 
-        endMethod
+		var
+			i: int
+			parentPcb: ptr to ProcessControlBlock
+		processManager.processManagerLock.Lock()
 
-      ----------  ProcessManager . WaitForZombie  ----------
+		-- take care of children of p
+		for i = 0 to MAX_NUMBER_OF_PROCESSES-1 by 1
+			if processManager.processTable[i].pid == p.parentsPid -- locate parent while dealing with children
+				parentPcb = &(processManager.processTable[i])
+			endIf
+			if processManager.processTable[i].status == ZOMBIE && processManager.processTable[i].parentsPid == p.pid
+				processManager.processTable[i].status = FREE	
+				processManager.freeList.AddToEnd(&processManager.processTable[i])
+				processManager.aProcessBecameFree.Signal(&(processManager.processManagerLock))
+			endIf
+		endFor
+
+		-- handle parent of p, turn into zombie or free self
+		if parentPcb != null && parentPcb.status == ACTIVE
+			p.status = ZOMBIE
+			processManager.aProcessDied.Broadcast(&(processManager.processManagerLock))
+		else
+			p.status = FREE
+			processManager.freeList.AddToEnd(p)
+			processManager.aProcessBecameFree.Signal(&(processManager.processManagerLock))	
+		endIf
+
+		processManager.processManagerLock.Unlock()
+
+      endMethod
+
+      ----------  ProcessManager . TurnIntoZombie  ----------
 
       method WaitForZombie (proc: ptr to ProcessControlBlock) returns int
-          var
-            procExitStatus: int
+		var
+			procExitStatus: int
 
-          processManager.processManagerLock.Lock()
-          
-          while proc.status != ZOMBIE
-            processManager.aProcessDied.Wait(&(processManager.processManagerLock))
-          endWhile
-          
-          procExitStatus = proc.exitStatus
-          proc.status = FREE
-          processManager.freeList.AddToEnd(proc)
-          processManager.aProcessBecameFree.Signal(&(processManager.processManagerLock))	
+		processManager.processManagerLock.Lock()
+		
+		while proc.status != ZOMBIE
+			processManager.aProcessDied.Wait(&(processManager.processManagerLock))
+		endWhile
+	
+		procExitStatus = proc.exitStatus
+		proc.status = FREE
+		processManager.freeList.AddToEnd(proc)
+		processManager.aProcessBecameFree.Signal(&(processManager.processManagerLock))	
 
-          processManager.processManagerLock.Unlock()
-          return procExitStatus
-        endMethod
+		processManager.processManagerLock.Unlock()
+		return procExitStatus
+      endMethod
 
       ----------  ProcessManager . FreeProcess  ----------
 
@@ -1029,15 +1034,12 @@ code Kernel
         --
         -- This method is passed a ptr to a Process;  It moves it
         -- to the FREE list.
-        --
-          -- NOT IMPLEMENTED
-          processManagerLock.Lock()
-          (*p).status = FREE
-          freeList.AddToEnd(p)
-          aProcessBecameFree.Signal(&processManagerLock)
-          processManagerLock.Unlock()
+				processManagerLock.Lock()
+				(*p).status = FREE
+				freeList.AddToEnd(p)
+				aProcessBecameFree.Signal(&processManagerLock)
+				processManagerLock.Unlock()
         endMethod
-
 
     endBehavior
 
@@ -1058,19 +1060,25 @@ code Kernel
     -- This routine is called when a process is to be terminated.  It will
     -- free the resources held by this process and will terminate the
     -- current thread.
-    --
-      -- FatalError ("ProcessFinish is not implemented")
-      var
-        oldIntStatus: int
-      currentThread.myProcess.exitStatus = exitStatus
-      oldIntStatus = SetInterruptsTo (DISABLED)
-      currentThread.isUserThread = false
-      oldIntStatus = SetInterruptsTo (oldIntStatus)
-      frameManager.ReturnAllFrames(&(currentThread.myProcess.addrSpace))
-      processManager.TurnIntoZombie(currentThread.myProcess)
-      currentThread.myProcess.myThread = null
-      currentThread.myProcess = null
-      ThreadFinish()
+ 		var
+			oldIntStatus: int
+			i: int
+		currentThread.myProcess.exitStatus = exitStatus
+		oldIntStatus = SetInterruptsTo (DISABLED)
+		currentThread.isUserThread = false
+		oldIntStatus = SetInterruptsTo (oldIntStatus)
+		-- clean up resources
+		frameManager.ReturnAllFrames(&(currentThread.myProcess.addrSpace))
+		processManager.TurnIntoZombie(currentThread.myProcess)
+		for i = 0 to MAX_FILES_PER_PROCESS-1
+			if currentThread.myProcess.fileDescriptor[i] != null
+				fileManager.Close(currentThread.myProcess.fileDescriptor[i])
+				currentThread.myProcess.fileDescriptor[i] = null
+			endIf
+		endFor
+		currentThread.myProcess.myThread = null
+		currentThread.myProcess = null
+		ThreadFinish()
     endFunction
 
 -----------------------------  FrameManager  ---------------------------------
@@ -1124,7 +1132,6 @@ code Kernel
       ----------  FrameManager . GetAFrame  ----------
 
       method GetAFrame () returns int
-        --
         -- Allocate a single frame and return its physical address.  If no frames
         -- are currently available, wait until the request can be completed.
         --
@@ -1151,43 +1158,56 @@ code Kernel
           return frameAddr
         endMethod
 
+      method GetAFrame2 () returns int
+        -- Allocate a single frame and return its physical address.  If no frames
+        -- are currently available, wait until the request can be completed.
+        --
+          var f, frameAddr: int
+
+          -- Find a free frame and allocate it...
+          f = framesInUse.FindZeroAndSet ()
+
+          -- Compute and return the physical address of the frame...
+          frameAddr = PHYSICAL_ADDRESS_OF_FIRST_PAGE_FRAME + (f * PAGE_SIZE)
+          -- printHexVar ("GetAFrame returning frameAddr", frameAddr)
+          return frameAddr
+        endMethod
+
       ----------  FrameManager . GetNewFrames  ----------
 
       method GetNewFrames (aPageTable: ptr to AddrSpace, numFramesNeeded: int)
-          -- NOT IMPLEMENTED
-        var 
-          i:int
-          frameAddr: int
-          frameManagerLock.Lock()
-          while numberFreeFrames < numFramesNeeded
-            newFramesAvailable.Wait (&frameManagerLock)
-          endWhile
-          for i = 0 to numFramesNeeded - 1
-            frameAddr = PHYSICAL_ADDRESS_OF_FIRST_PAGE_FRAME + ((framesInUse.FindZeroAndSet()) * PAGE_SIZE)
-            (*aPageTable).SetFrameAddr(i, frameAddr)
-          endFor
-          numberFreeFrames = numberFreeFrames - numFramesNeeded
-          (*aPageTable).numberOfPages = numFramesNeeded
-          frameManagerLock.Unlock()
-        endMethod
+				var 
+					i:int
+					frameAddr: int
+				frameManagerLock.Lock()
+        while numberFreeFrames < numFramesNeeded
+          newFramesAvailable.Wait (&frameManagerLock)
+        endWhile
+				for i = 0 to numFramesNeeded - 1
+					frameAddr = self.GetAFrame2()
+					(*aPageTable).SetFrameAddr(i, frameAddr)
+				endFor
+				numberFreeFrames = numberFreeFrames - numFramesNeeded
+				(*aPageTable).numberOfPages = numFramesNeeded
+				frameManagerLock.Unlock()
+				endMethod
 
       ----------  FrameManager . ReturnAllFrames  ----------
 
       method ReturnAllFrames (aPageTable: ptr to AddrSpace)
-          -- NOT IMPLEMENTED
-        var 
-          i:int
-          bitNumber: int
-          frameAddr: int
-          frameManagerLock.Lock()
-          for i = 0 to (*aPageTable).numberOfPages - 1
-            frameAddr = (*aPageTable).ExtractFrameAddr(i)
-            bitNumber = (frameAddr - PHYSICAL_ADDRESS_OF_FIRST_PAGE_FRAME) / PAGE_SIZE
-            framesInUse.ClearBit(bitNumber)
-          endFor
-          numberFreeFrames = numberFreeFrames + aPageTable.numberOfPages
-          newFramesAvailable.Broadcast(&frameManagerLock)
-          frameManagerLock.Unlock()
+				var 
+					i:int
+					bitIndex: int
+					frameAddr: int
+				frameManagerLock.Lock()
+				for i = 0 to (*aPageTable).numberOfPages - 1
+					frameAddr = (*aPageTable).ExtractFrameAddr(i)
+					bitIndex = (frameAddr - PHYSICAL_ADDRESS_OF_FIRST_PAGE_FRAME) / PAGE_SIZE
+					framesInUse.ClearBit(bitIndex)
+				endFor
+				numberFreeFrames = numberFreeFrames + aPageTable.numberOfPages
+				newFramesAvailable.Broadcast(&frameManagerLock)
+				frameManagerLock.Unlock()
         endMethod
 
     endBehavior
@@ -1578,19 +1598,14 @@ code Kernel
     -- for the duration of its execution.
     --
 -- Uncomment this code later...
-      -- FatalError ("DISK INTERRUPTS NOT EXPECTED IN PROJECT 4")
+      --FatalError ("DISK INTERRUPTS NOT EXPECTED IN PROJECT 4")
+
       currentInterruptStatus = DISABLED
       -- print ("DiskInterruptHandler invoked!\n")
       if diskDriver.semToSignalOnCompletion
         diskDriver.semToSignalOnCompletion.Up()
       endIf
-/*
-      currentInterruptStatus = DISABLED
-      -- print ("DiskInterruptHandler invoked!\n")
-      if diskDriver.semToSignalOnCompletion
-        diskDriver.semToSignalOnCompletion.Up()
-      endIf
-*/
+
     endFunction
 
 -----------------------------  SerialInterruptHandler  --------------------------
@@ -1781,198 +1796,168 @@ code Kernel
 -----------------------------  Handle_Sys_Exit  ---------------------------------
 
   function Handle_Sys_Exit (returnStatus: int)
-      -- NOT IMPLEMENTED
-      ProcessFinish(returnStatus)
+		ProcessFinish(returnStatus)
     endFunction
 
 -----------------------------  Handle_Sys_Shutdown  ---------------------------------
 
   function Handle_Sys_Shutdown ()
       -- NOT IMPLEMENTED
-      FatalError("FATAL ERROR in UserProgram: \"Syscall 'Shutdown' was invoked by a user thread\"")
     endFunction
 
 -----------------------------  Handle_Sys_Yield  ---------------------------------
 
   function Handle_Sys_Yield ()
-      currentThread.Yield()
+		currentThread.Yield()
     endFunction
 
 -----------------------------  Handle_Sys_Fork  ---------------------------------
 
   function Handle_Sys_Fork () returns int
-      var
-        newThread: ptr to Thread
-        newPCB: ptr to ProcessControlBlock
-        junk: int
-        i: int
-        oldUserPC: int
-        
-      newThread = threadManager.GetANewThread()
-      newPCB = processManager.GetANewProcess()
-      newPCB.myThread = newThread
-      newPCB.parentsPid = currentThread.myProcess.pid
-      newThread.status = READY
-      newThread.myProcess = newPCB
-      
-      -- copy user registers to the new thread
-      SaveUserRegs(&(newThread.userRegs[0]))
-      
-      --  other threads can share the CPU
-      junk = SetInterruptsTo (ENABLED)
-      
-      -- Initialize stack top
-      newThread.stackTop = &(newThread.systemStack[SYSTEM_STACK_SIZE-1])
-      
-      frameManager.GetNewFrames(&(newPCB.addrSpace), currentThread.myProcess.addrSpace.numberOfPages)	
-      
-      for i = 0 to currentThread.myProcess.addrSpace.numberOfPages-1 by 1
-        MemoryCopy(newPCB.addrSpace.ExtractFrameAddr(i) , currentThread.myProcess.addrSpace.ExtractFrameAddr(i), PAGE_SIZE)
-        if currentThread.myProcess.addrSpace.IsWritable(i) == true
-          newPCB.addrSpace.SetWritable(i)
-        else
-          newPCB.addrSpace.ClearWritable(i)
-        endIf
-      endFor
-      
-      -- need to know where to start for the child
-      oldUserPC = GetOldUserPCFromSystemStack()
-      newThread.Fork (ResumeChildAfterFork, oldUserPC)
-      
-      return newPCB.pid
+		var
+			newThread: ptr to Thread
+			newPCB: ptr to ProcessControlBlock
+			junk: int
+			i: int
+			oldUserPC: int
+
+		-- Create and link a new process and thread
+		newThread = threadManager.GetANewThread()
+		newPCB = processManager.GetANewProcess()
+		newPCB.myThread = newThread
+		newPCB.parentsPid = currentThread.myProcess.pid
+		newThread.status = READY
+		newThread.myProcess = newPCB
+
+		-- Copy user registers to new thread
+		SaveUserRegs(&(newThread.userRegs[0]))
+
+		junk = SetInterruptsTo (ENABLED) -- allow other threads to run now that the user registers have been saved
+
+		-- open files in parent in this one
+		for i = 0 to MAX_FILES_PER_PROCESS-1
+			if currentThread.myProcess.fileDescriptor[i] != null
+				currentThread.myProcess.fileDescriptor[i].numberOfUsers = currentThread.myProcess.fileDescriptor[i].numberOfUsers + 1
+				newThread.myProcess.fileDescriptor[i] = currentThread.myProcess.fileDescriptor[i]
+			endIf		
+		endFor
+		
+		-- Initialize stack top
+		newThread.stackTop = &(newThread.systemStack[SYSTEM_STACK_SIZE-1])
+
+		frameManager.GetNewFrames(&(newPCB.addrSpace), currentThread.myProcess.addrSpace.numberOfPages)		
+		for i = 0 to currentThread.myProcess.addrSpace.numberOfPages-1 by 1
+			MemoryCopy(newPCB.addrSpace.ExtractFrameAddr(i) , currentThread.myProcess.addrSpace.ExtractFrameAddr(i), PAGE_SIZE)		
+			if currentThread.myProcess.addrSpace.IsWritable(i) == false -- copy frame state (writable or not)
+				newPCB.addrSpace.ClearWritable(i)	
+			else
+				newPCB.addrSpace.SetWritable(i) -- copy address space contents
+			endIf	
+		endFor
+	
+		-- fork
+		oldUserPC = GetOldUserPCFromSystemStack()
+		newThread.Fork(ResumeChildAfterFork, oldUserPC)	
+
+		return newPCB.pid
+
     endFunction
-  
-  function ResumeChildAfterFork (initUserPC: int)
-      var
-        junk: int
-        initUserStackTop: int
-        initSystemStackTop: int
-      
-      junk = SetInterruptsTo (DISABLED)
-      currentThread.myProcess.addrSpace.SetToThisPageTable()
-      RestoreUserRegs(&(currentThread.userRegs[0]))
-      currentThread.isUserThread = true
-      initUserStackTop = currentThread.userRegs[14]
-      initSystemStackTop = (& currentThread.systemStack[SYSTEM_STACK_SIZE-1]) asInteger
-      BecomeUserThread(initUserStackTop, initUserPC, initSystemStackTop)  
-    endFunction
-      
+
+	function ResumeChildAfterFork (startPC: int)
+		var
+			junk: int
+			initUserStackTop: int
+			initSystemStackTop: int
+
+		junk = SetInterruptsTo (DISABLED)
+		currentThread.myProcess.addrSpace.SetToThisPageTable()
+		RestoreUserRegs(&(currentThread.userRegs[0]))
+		currentThread.isUserThread = true
+		initUserStackTop = currentThread.userRegs[14]
+		initSystemStackTop = (& currentThread.systemStack[SYSTEM_STACK_SIZE-1]) asInteger
+		BecomeUserThread(initUserStackTop, startPC, initSystemStackTop)
+	endFunction
+
 -----------------------------  Handle_Sys_Join  ---------------------------------
 
   function Handle_Sys_Join (processID: int) returns int
-      var 
-        i:int
-        childExitStatus: int
-      for i = 0 to MAX_NUMBER_OF_PROCESSES-1 by 1
-        if processManager.processTable[i].pid == processID && processManager.processTable[i].parentsPid == currentThread.myProcess.pid && processManager.processTable[i].status != FREE
-          childExitStatus = processManager.WaitForZombie(&(processManager.processTable[i]))
-          return childExitStatus			
-        endIf		
-      endFor
+		var 
+			i:int
+			childExitStatus: int
+		for i = 0 to MAX_NUMBER_OF_PROCESSES-1 by 1
+			if processManager.processTable[i].pid == processID && processManager.processTable[i].parentsPid == currentThread.myProcess.pid && processManager.processTable[i].status != FREE
+				childExitStatus = processManager.WaitForZombie(&(processManager.processTable[i]))
+				return childExitStatus			
+			endIf		
+		endFor
       return -1
     endFunction
 
 -----------------------------  Handle_Sys_Exec  ---------------------------------
 
   function Handle_Sys_Exec (filename: ptr to array of char) returns int
-      -- NOT IMPLEMENTED
-      var
-        newAddrSpace: AddrSpace = new AddrSpace
-        kernalFileName: array [MAX_STRING_SIZE] of char
-        initUserStackTop: int
-        initSystemStackTop: int
-        entryPoint: int
-        openFilePtr: ptr to OpenFile
-        ret: int
-        junk: int
-      junk = SetInterruptsTo (DISABLED)
-      ret = (*currentThread).myProcess.addrSpace.GetStringFromVirtual(&kernalFileName, filename asInteger, MAX_STRING_SIZE) 
-      if ret < 0
-        return -1
-      endIf
-      newAddrSpace.Init()
-      openFilePtr = fileManager.Open(&kernalFileName)
-      if openFilePtr == null
-        return -1
-      endIf
-      entryPoint = openFilePtr.LoadExecutable(&newAddrSpace)
-      if entryPoint < 0
-        return -1
-      endIf
-      frameManager.ReturnAllFrames(&((*currentThread).myProcess.addrSpace))
-      currentThread.myProcess.addrSpace = newAddrSpace
-      fileManager.Close(openFilePtr)
-      (*currentThread).isUserThread = true
-      initUserStackTop = newAddrSpace.numberOfPages*PAGE_SIZE 
-      initSystemStackTop = (& currentThread.systemStack[SYSTEM_STACK_SIZE-1]) asInteger
-      newAddrSpace.SetToThisPageTable()
-      BecomeUserThread(initUserStackTop, entryPoint, initSystemStackTop)
-      return 3000
+		var
+			newAddrSpace: AddrSpace = new AddrSpace
+			kernalFileName: array [MAX_STRING_SIZE] of char
+			initUserStackTop: int
+			initSystemStackTop: int
+			entryPoint: int
+			openFilePtr: ptr to OpenFile
+			temp: int
+
+		temp = SetInterruptsTo (DISABLED)
+
+		temp = (*currentThread).myProcess.addrSpace.GetStringFromVirtual(&kernalFileName, filename asInteger, MAX_STRING_SIZE) 
+		if temp < 0
+			return -1
+		endIf
+
+		newAddrSpace.Init()
+
+		openFilePtr = fileManager.Open(&kernalFileName)
+		if openFilePtr == null
+			return -1
+		endIf
+
+		entryPoint = openFilePtr.LoadExecutable(&newAddrSpace)
+		if entryPoint < 0
+			return -1
+		endIf
+
+		frameManager.ReturnAllFrames(&((*currentThread).myProcess.addrSpace))
+
+		currentThread.myProcess.addrSpace = newAddrSpace
+
+		fileManager.Close(openFilePtr)
+		(*currentThread).isUserThread = true
+
+		initUserStackTop = newAddrSpace.numberOfPages*PAGE_SIZE 
+		initSystemStackTop = (& currentThread.systemStack[SYSTEM_STACK_SIZE-1]) asInteger
+
+		newAddrSpace.SetToThisPageTable()
+		BecomeUserThread(initUserStackTop, entryPoint, initSystemStackTop)
+		return 3000
     endFunction
 
 -----------------------------  Handle_Sys_Create  ---------------------------------
 
   function Handle_Sys_Create (filename: ptr to array of char) returns int
       -- NOT IMPLEMENTED
-      var
-        ret:int
-        kernalFileName: array [MAX_STRING_SIZE] of char
-      ret = (*currentThread).myProcess.addrSpace.GetStringFromVirtual(&kernalFileName, filename asInteger, MAX_STRING_SIZE)
-      if ret < 0
-        return -1
-      endIf
-      print("Handle_Sys_Create invoked!")
-      nl()
-      print("virtual addr of filename = ")
-      printHex(filename asInteger)
-      nl()
-      print("filename = ")
-      print(&kernalFileName)
-      nl()
-      return 4000
+		var
+			temp:int
+			kernalFileName: array [MAX_STRING_SIZE] of char
+		temp = (*currentThread).myProcess.addrSpace.GetStringFromVirtual(&kernalFileName, filename asInteger, MAX_STRING_SIZE) 
+		print("Handle_Sys_Create invoked!")
+		nl()
+		print("Virtual address of filename: ")
+		printHex(filename asInteger)
+		nl()
+		print("Filename: ")
+		print(&kernalFileName)
+		nl()
+		return 4000
     endFunction
 
-/*
------------------------------  Handle_Sys_Open  ---------------------------------
-
-  function Handle_Sys_Open (filename: ptr to array of char) returns int
-      var
-        ret:int
-        i:int
-        fileDescriptorIndex: int
-        strBuffer: array [MAX_STRING_SIZE] of char
-        openFile: ptr to OpenFile
-    
-      -- Did not check that filename length is less than MAX_STRING_SIZE explicitly
-      ret = (*currentThread).myProcess.addrSpace.GetStringFromVirtual(&strBuffer, filename asInteger, MAX_STRING_SIZE) 
-      if ret < 0
-        return -1
-      endIf
-
-      -- locate empty slot in fileDescriptor array		
-      fileDescriptorIndex = -1
-      for i = 0 to MAX_FILES_PER_PROCESS-1
-        if currentThread.myProcess.fileDescriptor[i] == null
-          fileDescriptorIndex = i
-          break
-        endIf
-      endFor
-      
-      if fileDescriptorIndex == -1
-        return -1
-      endIf
-    
-      -- allocate new OpenFile object
-      openFile = fileManager.Open(&strBuffer)
-      
-      if openFile == null
-        return -1		
-      endIf
-    
-      currentThread.myProcess.fileDescriptor[fileDescriptorIndex] = openFile
-      return fileDescriptorIndex
-    endFunction
-*/
 -----------------------------  Handle_Sys_Open  ---------------------------------
 
   function Handle_Sys_Open (filename: ptr to array of char) returns int
@@ -2008,195 +1993,183 @@ code Kernel
 -----------------------------  Handle_Sys_Read  ---------------------------------
 
   function Handle_Sys_Read (fileDesc: int, buffer: ptr to char, sizeInBytes: int) returns int
-      var
-        virtAddr: int
-        virtPage: int
-        offset: int
-        copiedSoFar: int
-        nextPosInFile: int
-        currentChunkSize: int
-        
-        fileSize: int
-        destAddr: int
-        openFile: ptr to OpenFile
-        readSuccess: bool
+		var
+			virtAddr: int
+			virtPage: int
+			offset: int
+			copiedSoFar: int
+			nextPosInFile: int
+			currentChunkSize: int
+			fileSize: int
+			destAddr: int
+			openFile: ptr to OpenFile
+			readSuccess: bool
 
-      -- error checking
-      if fileDesc < 0 || fileDesc > MAX_FILES_PER_PROCESS-1 || currentThread.myProcess.fileDescriptor[fileDesc] == null || sizeInBytes < 0
-        return -1		
-      endIf
+		-- error checking
+		if fileDesc < 0 || fileDesc > MAX_FILES_PER_PROCESS-1 || currentThread.myProcess.fileDescriptor[fileDesc] == null || sizeInBytes < 0
+			return -1		
+		endIf
 
-      -- first loop
-      openFile = currentThread.myProcess.fileDescriptor[fileDesc]
-      virtAddr = buffer asInteger
-      virtPage = virtAddr / PAGE_SIZE
-      offset = virtAddr % PAGE_SIZE
-      copiedSoFar = 0
-      nextPosInFile = openFile.currentPos
-      fileSize = openFile.fcb.sizeOfFileInBytes
-      
-      while true
-        currentChunkSize = PAGE_SIZE - offset
-        if nextPosInFile + currentChunkSize > fileSize
-          currentChunkSize = fileSize - nextPosInFile
-        endIf			
-        if copiedSoFar + currentChunkSize > sizeInBytes
-          currentChunkSize = sizeInBytes - copiedSoFar
-        endIf
-        if currentChunkSize <= 0
-          break
-        endIf
-        
-        if virtPage < 0 || virtPage > currentThread.myProcess.addrSpace.numberOfPages-1 || currentThread.myProcess.addrSpace.IsValid(virtPage)==false || currentThread.myProcess.addrSpace.IsWritable(virtPage)==false
-          return -1		
-        endIf
-      
-        nextPosInFile = nextPosInFile + currentChunkSize
-        copiedSoFar = copiedSoFar + currentChunkSize
-        virtPage = virtPage+1
-        offset = 0
-        if copiedSoFar == sizeInBytes
-          break
-        endIf		
-      endWhile
+		-- first while-loop to ensure success can be achieved
+		openFile = currentThread.myProcess.fileDescriptor[fileDesc]
+		virtAddr = buffer asInteger
+		virtPage = virtAddr / PAGE_SIZE
+		offset = virtAddr % PAGE_SIZE
+		copiedSoFar = 0
+		nextPosInFile = openFile.currentPos
+		fileSize = openFile.fcb.sizeOfFileInBytes
+		while true
+			currentChunkSize = PAGE_SIZE - offset
+			if nextPosInFile + currentChunkSize > fileSize
+				currentChunkSize = fileSize - nextPosInFile
+			endIf			
+			if copiedSoFar + currentChunkSize > sizeInBytes
+				currentChunkSize = sizeInBytes - copiedSoFar
+			endIf
+			if currentChunkSize <= 0
+				break
+			endIf
+			if virtPage < 0 || virtPage > currentThread.myProcess.addrSpace.numberOfPages-1 || currentThread.myProcess.addrSpace.IsValid(virtPage)==false || currentThread.myProcess.addrSpace.IsWritable(virtPage)==false
+				return -1 -- error			
+			endIf
+			nextPosInFile = nextPosInFile + currentChunkSize
+			copiedSoFar = copiedSoFar + currentChunkSize
+			virtPage = virtPage+1
+			offset = 0
+			if copiedSoFar == sizeInBytes
+				break
+			endIf		
+		endWhile
 
-      -- second loop
-      openFile = currentThread.myProcess.fileDescriptor[fileDesc]
-      virtAddr = buffer asInteger
-      virtPage = virtAddr / PAGE_SIZE
-      offset = virtAddr % PAGE_SIZE
-      copiedSoFar = 0
-      nextPosInFile = openFile.currentPos
-      fileSize = openFile.fcb.sizeOfFileInBytes
+		-- second while-loop to actually do the reading
+		openFile = currentThread.myProcess.fileDescriptor[fileDesc]
+		virtAddr = buffer asInteger
+		virtPage = virtAddr / PAGE_SIZE
+		offset = virtAddr % PAGE_SIZE
+		copiedSoFar = 0
+		nextPosInFile = openFile.currentPos
+		fileSize = openFile.fcb.sizeOfFileInBytes
 
-      while true
-        currentChunkSize = PAGE_SIZE - offset
-        if nextPosInFile + currentChunkSize > fileSize
-          currentChunkSize = fileSize - nextPosInFile
-        endIf			
-        if copiedSoFar + currentChunkSize > sizeInBytes
-          currentChunkSize = sizeInBytes - copiedSoFar
-        endIf
-        if currentChunkSize <= 0
-          break
-        endIf
-        
-        if virtPage < 0 || virtPage > currentThread.myProcess.addrSpace.numberOfPages-1 || currentThread.myProcess.addrSpace.IsValid(virtPage)==false || currentThread.myProcess.addrSpace.IsWritable(virtPage)==false
-          return -1		
-        endIf
-        
-        currentThread.myProcess.addrSpace.SetReferenced(virtPage)
-        currentThread.myProcess.addrSpace.SetDirty(virtPage)
-        destAddr = currentThread.myProcess.addrSpace.ExtractFrameAddr(virtPage) + offset
-        readSuccess = fileManager.SynchRead(openFile, destAddr, nextPosInFile, currentChunkSize)
-        
-        nextPosInFile = nextPosInFile + currentChunkSize
-        copiedSoFar = copiedSoFar + currentChunkSize
-        virtPage = virtPage+1
-        offset = 0
-        if copiedSoFar == sizeInBytes
-          break
-        endIf
-        
-      endWhile
+		while true
+			currentChunkSize = PAGE_SIZE - offset
+			if nextPosInFile + currentChunkSize > fileSize
+				currentChunkSize = fileSize - nextPosInFile
+			endIf			
+			if copiedSoFar + currentChunkSize > sizeInBytes
+				currentChunkSize = sizeInBytes - copiedSoFar
+			endIf
+			if currentChunkSize <= 0
+				break
+			endIf
+			if virtPage < 0 || virtPage > currentThread.myProcess.addrSpace.numberOfPages-1 || currentThread.myProcess.addrSpace.IsValid(virtPage)==false || currentThread.myProcess.addrSpace.IsWritable(virtPage)==false
+				return -1 -- error			
+			endIf
+			currentThread.myProcess.addrSpace.SetReferenced(virtPage)
+			currentThread.myProcess.addrSpace.SetDirty(virtPage)
+			destAddr = currentThread.myProcess.addrSpace.ExtractFrameAddr(virtPage) + offset
+			readSuccess = fileManager.SynchRead(openFile, destAddr, nextPosInFile, currentChunkSize)
+			nextPosInFile = nextPosInFile + currentChunkSize
+			copiedSoFar = copiedSoFar + currentChunkSize
+			virtPage = virtPage+1
+			offset = 0
+			if copiedSoFar == sizeInBytes
+				break
+			endIf		
+		endWhile
 
-      openFile.currentPos = nextPosInFile
+		openFile.currentPos = nextPosInFile
 
       return copiedSoFar
     endFunction
 
+
 -----------------------------  Handle_Sys_Write  ---------------------------------
 
   function Handle_Sys_Write (fileDesc: int, buffer: ptr to char, sizeInBytes: int) returns int
+		var
+			virtAddr: int
+			virtPage: int
+			offset: int
+			copiedSoFar: int
+			nextPosInFile: int
+			currentChunkSize: int
+			fileSize: int
+			destAddr: int
+			openFile: ptr to OpenFile
+			readSuccess: bool
 
-      var
-        virtAddr: int
-        virtPage: int
-        offset: int
-        copiedSoFar: int
-        nextPosInFile: int
-        currentChunkSize: int
-        fileSize: int
-        destAddr: int
-        openFile: ptr to OpenFile
-        readSuccess: bool
+		-- error checking
+		if fileDesc < 0 || fileDesc > MAX_FILES_PER_PROCESS-1 || currentThread.myProcess.fileDescriptor[fileDesc] == null || sizeInBytes < 0
+			return -1		
+		endIf
 
-      -- error checking
-      if fileDesc < 0 || fileDesc > MAX_FILES_PER_PROCESS-1 || currentThread.myProcess.fileDescriptor[fileDesc] == null || sizeInBytes < 0
-        return -1		
-      endIf
+		-- first while-loop to ensure success can be achieved
+		openFile = currentThread.myProcess.fileDescriptor[fileDesc]
+		virtAddr = buffer asInteger
+		virtPage = virtAddr / PAGE_SIZE
+		offset = virtAddr % PAGE_SIZE
+		copiedSoFar = 0
+		nextPosInFile = openFile.currentPos
+		fileSize = openFile.fcb.sizeOfFileInBytes
+		while true
+			currentChunkSize = PAGE_SIZE - offset
+			if nextPosInFile + currentChunkSize > fileSize
+				currentChunkSize = fileSize - nextPosInFile
+			endIf			
+			if copiedSoFar + currentChunkSize > sizeInBytes
+				currentChunkSize = sizeInBytes - copiedSoFar
+			endIf
+			if currentChunkSize <= 0
+				break
+			endIf
+			if virtPage < 0 || virtPage > currentThread.myProcess.addrSpace.numberOfPages-1 || currentThread.myProcess.addrSpace.IsValid(virtPage)==false || currentThread.myProcess.addrSpace.IsWritable(virtPage)==false
+				return -1 -- error			
+			endIf
+			nextPosInFile = nextPosInFile + currentChunkSize
+			copiedSoFar = copiedSoFar + currentChunkSize
+			virtPage = virtPage+1
+			offset = 0
+			if copiedSoFar == sizeInBytes
+				break
+			endIf		
+		endWhile
 
-      -- first loop
-      openFile = currentThread.myProcess.fileDescriptor[fileDesc]
-      virtAddr = buffer asInteger
-      virtPage = virtAddr / PAGE_SIZE
-      offset = virtAddr % PAGE_SIZE
-      copiedSoFar = 0
-      nextPosInFile = openFile.currentPos
-      fileSize = openFile.fcb.sizeOfFileInBytes
-      
-      while true
-        currentChunkSize = PAGE_SIZE - offset
-        if nextPosInFile + currentChunkSize > fileSize
-          currentChunkSize = fileSize - nextPosInFile
-        endIf			
-        if copiedSoFar + currentChunkSize > sizeInBytes
-          currentChunkSize = sizeInBytes - copiedSoFar
-        endIf
-        if currentChunkSize <= 0
-          break
-        endIf
-        if virtPage < 0 || virtPage > currentThread.myProcess.addrSpace.numberOfPages-1 || currentThread.myProcess.addrSpace.IsValid(virtPage)==false || currentThread.myProcess.addrSpace.IsWritable(virtPage)==false
-          return -1 -- error			
-        endIf
-        nextPosInFile = nextPosInFile + currentChunkSize
-        copiedSoFar = copiedSoFar + currentChunkSize
-        virtPage = virtPage+1
-        offset = 0
-        if copiedSoFar == sizeInBytes
-          break
-        endIf		
-      endWhile
+		-- second while-loop to actually do the reading
+		openFile = currentThread.myProcess.fileDescriptor[fileDesc]
+		virtAddr = buffer asInteger
+		virtPage = virtAddr / PAGE_SIZE
+		offset = virtAddr % PAGE_SIZE
+		copiedSoFar = 0
+		nextPosInFile = openFile.currentPos
+		fileSize = openFile.fcb.sizeOfFileInBytes
 
-      -- second loop
-      openFile = currentThread.myProcess.fileDescriptor[fileDesc]
-      virtAddr = buffer asInteger
-      virtPage = virtAddr / PAGE_SIZE
-      offset = virtAddr % PAGE_SIZE
-      copiedSoFar = 0
-      nextPosInFile = openFile.currentPos
-      fileSize = openFile.fcb.sizeOfFileInBytes
+		while true
+			currentChunkSize = PAGE_SIZE - offset
+			if nextPosInFile + currentChunkSize > fileSize
+				currentChunkSize = fileSize - nextPosInFile
+			endIf			
+			if copiedSoFar + currentChunkSize > sizeInBytes
+				currentChunkSize = sizeInBytes - copiedSoFar
+			endIf
+			if currentChunkSize <= 0
+				break
+			endIf
+			if virtPage < 0 || virtPage > currentThread.myProcess.addrSpace.numberOfPages-1 || currentThread.myProcess.addrSpace.IsValid(virtPage)==false || currentThread.myProcess.addrSpace.IsWritable(virtPage)==false
+				return -1 -- error			
+			endIf
+			currentThread.myProcess.addrSpace.SetReferenced(virtPage)
+			destAddr = currentThread.myProcess.addrSpace.ExtractFrameAddr(virtPage) + offset
+			readSuccess = fileManager.SynchWrite(openFile, destAddr, nextPosInFile, currentChunkSize)
+			nextPosInFile = nextPosInFile + currentChunkSize
+			copiedSoFar = copiedSoFar + currentChunkSize
+			virtPage = virtPage+1
+			offset = 0
+			if copiedSoFar == sizeInBytes
+				break
+			endIf		
+		endWhile
 
-      while true
-        currentChunkSize = PAGE_SIZE - offset
-        if nextPosInFile + currentChunkSize > fileSize
-          currentChunkSize = fileSize - nextPosInFile
-        endIf			
-        if copiedSoFar + currentChunkSize > sizeInBytes
-          currentChunkSize = sizeInBytes - copiedSoFar
-        endIf
-        if currentChunkSize <= 0
-          break
-        endIf
-        
-        if virtPage < 0 || virtPage > currentThread.myProcess.addrSpace.numberOfPages-1 || currentThread.myProcess.addrSpace.IsValid(virtPage)==false || currentThread.myProcess.addrSpace.IsWritable(virtPage)==false
-          return -1	
-        endIf
-        
-        currentThread.myProcess.addrSpace.SetReferenced(virtPage)
-        destAddr = currentThread.myProcess.addrSpace.ExtractFrameAddr(virtPage) + offset
-        readSuccess = fileManager.SynchWrite(openFile, destAddr, nextPosInFile, currentChunkSize)
-        
-        nextPosInFile = nextPosInFile + currentChunkSize
-        copiedSoFar = copiedSoFar + currentChunkSize
-        virtPage = virtPage+1
-        offset = 0
-        if copiedSoFar == sizeInBytes
-          break
-        endIf		
-      endWhile
-
-      openFile.currentPos = nextPosInFile
+		openFile.currentPos = nextPosInFile
 
       return copiedSoFar
     endFunction
@@ -2204,38 +2177,35 @@ code Kernel
 -----------------------------  Handle_Sys_Seek  ---------------------------------
 
   function Handle_Sys_Seek (fileDesc: int, newCurrentPos: int) returns int
-      var
-        openFile: ptr to OpenFile
-        
-      fileManager.fileManagerLock.Lock()
-      
-      -- all in one error checking
-      if fileDesc < 0 || fileDesc > MAX_FILES_PER_PROCESS-1 || currentThread.myProcess.fileDescriptor[fileDesc] == null || newCurrentPos < -1 || newCurrentPos > currentThread.myProcess.fileDescriptor[fileDesc].fcb.sizeOfFileInBytes
-        fileManager.fileManagerLock.Unlock()
-        return -1		
-      endIf
-      
-      openFile = currentThread.myProcess.fileDescriptor[fileDesc]
-      
-      if newCurrentPos == -1
-        openFile.currentPos = openFile.fcb.sizeOfFileInBytes
-        fileManager.fileManagerLock.Unlock()
-        return openFile.fcb.sizeOfFileInBytes
-      endIf
-      
-      openFile.currentPos = newCurrentPos
-      fileManager.fileManagerLock.Unlock()
-      
-      return newCurrentPos
+		-- if newCurrentPos = -1, means fileSize N
+		var
+			openFile: ptr to OpenFile
+		fileManager.fileManagerLock.Lock()
+		-- error checking
+		if fileDesc < 0 || fileDesc > MAX_FILES_PER_PROCESS-1 || currentThread.myProcess.fileDescriptor[fileDesc] == null || newCurrentPos < -1 || newCurrentPos > currentThread.myProcess.fileDescriptor[fileDesc].fcb.sizeOfFileInBytes
+			fileManager.fileManagerLock.Unlock()
+			return -1		
+		endIf
+		openFile = currentThread.myProcess.fileDescriptor[fileDesc]
+		if newCurrentPos == -1
+			openFile.currentPos = openFile.fcb.sizeOfFileInBytes
+			fileManager.fileManagerLock.Unlock()
+			return openFile.fcb.sizeOfFileInBytes
+		endIf
+		openFile.currentPos = newCurrentPos
+		fileManager.fileManagerLock.Unlock()
+		return newCurrentPos
     endFunction
 
 -----------------------------  Handle_Sys_Close  ---------------------------------
 
   function Handle_Sys_Close (fileDesc: int)
-      if !(fileDesc < 0) && !(fileDesc > MAX_FILES_PER_PROCESS-1) && !(currentThread.myProcess.fileDescriptor[fileDesc] == null)
-        fileManager.Close(currentThread.myProcess.fileDescriptor[fileDesc])
-        currentThread.myProcess.fileDescriptor[fileDesc] = null
-      endIf
+		if fileDesc < 0 || fileDesc > MAX_FILES_PER_PROCESS-1 || currentThread.myProcess.fileDescriptor[fileDesc] == null		
+			-- do nothing		
+		else
+			fileManager.Close(currentThread.myProcess.fileDescriptor[fileDesc])
+			currentThread.myProcess.fileDescriptor[fileDesc] = null
+		endIf
     endFunction
 
 -----------------------------  DiskDriver  ---------------------------------
@@ -2675,6 +2645,9 @@ code Kernel
         -- This method writes out the buffer, if it is dirty.  This method
         -- assumes the caller already holds the fileManagerLock.
         --
+			if open==null
+				print("openisnull")
+			endIf
           if open.fcb.bufferIsDirty
             if open.fcb.relativeSectorInBuffer < 0
               FatalError ("FileManager.Flush: buffer is dirty but relativeSectorInBuffer =  -1")
