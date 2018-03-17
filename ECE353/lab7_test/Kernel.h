@@ -103,7 +103,7 @@ header Kernel
     FatalError_ThreadVersion (errorMessage: ptr to array of char)
     SetInterruptsTo (newStatus: int) returns int
     ProcessFinish (exitStatus: int)
-		InitFirstProcess()
+    InitFirstProcess ()
 
     -- Routines from Switch.s:
 
@@ -194,8 +194,8 @@ header Kernel
     fields
       threadTable: array [MAX_NUMBER_OF_PROCESSES] of Thread
       freeList: List [Thread]
-			aThreadIsAvailable: Condition
-			threadManagerLock: Mutex
+      aThreadBecameFree: Condition
+      threadManagerLock: Mutex
     methods
       Init ()
       Print ()
@@ -264,7 +264,6 @@ header Kernel
       Init ()
       Print ()
       GetAFrame () returns int                         -- returns addr of frame
-      GetAFrame2 () returns int
       GetNewFrames (aPageTable: ptr to AddrSpace, numFramesNeeded: int)
       ReturnAllFrames (aPageTable: ptr to AddrSpace)
   endClass
