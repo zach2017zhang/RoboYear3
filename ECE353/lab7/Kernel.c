@@ -1932,7 +1932,7 @@ code Kernel
       return 4000
     endFunction
 
-/*
+
 -----------------------------  Handle_Sys_Open  ---------------------------------
 
   function Handle_Sys_Open (filename: ptr to array of char) returns int
@@ -1972,38 +1972,7 @@ code Kernel
       currentThread.myProcess.fileDescriptor[fileDescriptorIndex] = openFile
       return fileDescriptorIndex
     endFunction
-*/
------------------------------  Handle_Sys_Open  ---------------------------------
 
-  function Handle_Sys_Open (filename: ptr to array of char) returns int
-		var
-			temp:int
-			i:int
-			fileDescriptorIndex: int
-			kernalFileName: array [MAX_STRING_SIZE] of char
-			openFile: ptr to OpenFile
-		-- Did not check that filename length is less than MAX_STRING_SIZE explicitly
-		temp = (*currentThread).myProcess.addrSpace.GetStringFromVirtual(&kernalFileName, filename asInteger, MAX_STRING_SIZE) 
-
-		-- locate empty slot in fileDescriptor array		
-		fileDescriptorIndex = -1
-		for i = 0 to MAX_FILES_PER_PROCESS-1
-			if currentThread.myProcess.fileDescriptor[i] == null
-				fileDescriptorIndex = i
-				break
-			endIf
-		endFor
-		if fileDescriptorIndex == -1
-			return -1
-		endIf
-		-- allocate new OpenFile object
-		openFile = fileManager.Open(&kernalFileName)
-		if openFile == null
-			return -1		
-		endIf
-		currentThread.myProcess.fileDescriptor[fileDescriptorIndex] = openFile
-      return fileDescriptorIndex
-    endFunction
 
 -----------------------------  Handle_Sys_Read  ---------------------------------
 
