@@ -889,22 +889,24 @@ code Kernel
         --
         -- This method is called once at kernel startup time to initialize
         -- the one and only "processManager" object.  
+        --
+        -- NOT IMPLEMENTED
         var
           i: int
-        freeList = new List[ProcessControlBlock]
-        processTable = new array of ProcessControlBlock {MAX_NUMBER_OF_PROCESSES of new ProcessControlBlock}
-        processManagerLock = new Mutex
-        aProcessBecameFree = new Condition
-        aProcessDied = new Condition
-        for i = 0 to MAX_NUMBER_OF_PROCESSES-1 by 1
-					processTable[i].Init()
-          freeList.AddToEnd(&processTable[i])
-          processTable[i].status = FREE
-        endFor
-		nextPid = 0
-        processManagerLock.Init()
-        aProcessBecameFree.Init()
-        aProcessDied.Init()
+          processTable = new array of ProcessControlBlock {MAX_NUMBER_OF_PROCESSES of new ProcessControlBlock}
+          processManagerLock = new Mutex
+          aProcessBecameFree = new Condition
+          aProcessDied = new Condition
+          freeList = new List[ProcessControlBlock]
+          for i = 0 to MAX_NUMBER_OF_PROCESSES-1 by 1
+            processTable[i].Init()
+            processTable[i].status = FREE
+            freeList.AddToEnd(&processTable[i])
+          endFor
+          nextPid = 0
+          processManagerLock.Init()
+          aProcessBecameFree.Init()
+          aProcessDied.Init()
         endMethod
 
       ----------  ProcessManager . Print  ----------
@@ -959,74 +961,77 @@ code Kernel
         -- This method returns a new ProcessControlBlock; it will wait
         -- until one is available.
         --
-				var
-					nextProcessPtr: ptr to ProcessControlBlock
-				processManagerLock.Lock()
-				while(freeList.IsEmpty())
-					aProcessBecameFree.Wait(&processManagerLock)
-				endWhile
-				nextProcessPtr = freeList.Remove()
-				nextPid = nextPid + 1
-				(*nextProcessPtr).pid = nextPid
-				(*nextProcessPtr).status = ACTIVE
-				processManagerLock.Unlock()
-        return nextProcessPtr
+          -- NOT IMPLEMENTED
+        var
+          NewProcessPtr: ptr to ProcessControlBlock
+          processManagerLock.Lock()
+          while freeList.IsEmpty()
+            aProcessBecameFree.Wait(&processManagerLock)
+          endWhile
+          NewProcessPtr = freeList.Remove()
+          nextPid = nextPid + 1
+          (*NewProcessPtr).pid = nextPid
+          (*NewProcessPtr).status = ACTIVE
+          processManagerLock.Unlock()
+          return NewProcessPtr
         endMethod
-
+        
       ----------  ProcessManager . TurnIntoZombie  ----------
 
       method TurnIntoZombie (p: ptr to ProcessControlBlock)
-		var
-			i: int
-			parentPcb: ptr to ProcessControlBlock
-		processManager.processManagerLock.Lock()
+        var
+          i: int
+          parentPcb: ptr to ProcessControlBlock
+          
+          processManager.processManagerLock.Lock()
+          
+          -- deal with children
+          for i = 0 to MAX_NUMBER_OF_PROCESSES-1 by 1
+            if processManager.processTable[i].status == ZOMBIE && processManager.processTable[i].parentsPid == p.pid
+              processManager.processTable[i].status = FREE	
+              processManager.freeList.AddToEnd(&processManager.processTable[i])
+              processManager.aProcessBecameFree.Signal(&(processManager.processManagerLock))
+            endIf
+          endFor
+          
+          -- identify the parent and deal with the current process
+          for i = 0 to MAX_NUMBER_OF_PROCESSES-1 by 1
+            if processManager.processTable[i].pid == p.parentsPid -- locate parent while dealing with children
+              parentPcb = &(processManager.processTable[i])
+            endIf
+          endFor
+          if parentPcb != null && parentPcb.status == ACTIVE
+            p.status = ZOMBIE
+            processManager.aProcessDied.Broadcast(&(processManager.processManagerLock))
+          else
+            p.status = FREE
+            processManager.freeList.AddToEnd(p)
+            processManager.aProcessBecameFree.Signal(&(processManager.processManagerLock))	
+          endIf       
+          
+          processManager.processManagerLock.Unlock() 
+        endMethod
 
-		-- take care of children of p
-		for i = 0 to MAX_NUMBER_OF_PROCESSES-1 by 1
-			if processManager.processTable[i].pid == p.parentsPid -- locate parent while dealing with children
-				parentPcb = &(processManager.processTable[i])
-			endIf
-			if processManager.processTable[i].status == ZOMBIE && processManager.processTable[i].parentsPid == p.pid
-				processManager.processTable[i].status = FREE	
-				processManager.freeList.AddToEnd(&processManager.processTable[i])
-				processManager.aProcessBecameFree.Signal(&(processManager.processManagerLock))
-			endIf
-		endFor
-
-		-- handle parent of p, turn into zombie or free self
-		if parentPcb != null && parentPcb.status == ACTIVE
-			p.status = ZOMBIE
-			processManager.aProcessDied.Broadcast(&(processManager.processManagerLock))
-		else
-			p.status = FREE
-			processManager.freeList.AddToEnd(p)
-			processManager.aProcessBecameFree.Signal(&(processManager.processManagerLock))	
-		endIf
-
-		processManager.processManagerLock.Unlock()
-
-      endMethod
-
-      ----------  ProcessManager . TurnIntoZombie  ----------
+      ----------  ProcessManager . WaitForZombie  ----------
 
       method WaitForZombie (proc: ptr to ProcessControlBlock) returns int
-		var
-			procExitStatus: int
+          var
+            procExitStatus: int
 
-		processManager.processManagerLock.Lock()
-		
-		while proc.status != ZOMBIE
-			processManager.aProcessDied.Wait(&(processManager.processManagerLock))
-		endWhile
-	
-		procExitStatus = proc.exitStatus
-		proc.status = FREE
-		processManager.freeList.AddToEnd(proc)
-		processManager.aProcessBecameFree.Signal(&(processManager.processManagerLock))	
+          processManager.processManagerLock.Lock()
+          
+          while proc.status != ZOMBIE
+            processManager.aProcessDied.Wait(&(processManager.processManagerLock))
+          endWhile
+          
+          procExitStatus = proc.exitStatus
+          proc.status = FREE
+          processManager.freeList.AddToEnd(proc)
+          processManager.aProcessBecameFree.Signal(&(processManager.processManagerLock))	
 
-		processManager.processManagerLock.Unlock()
-		return procExitStatus
-      endMethod
+          processManager.processManagerLock.Unlock()
+          return procExitStatus
+        endMethod
 
       ----------  ProcessManager . FreeProcess  ----------
 
@@ -1034,12 +1039,15 @@ code Kernel
         --
         -- This method is passed a ptr to a Process;  It moves it
         -- to the FREE list.
-				processManagerLock.Lock()
-				(*p).status = FREE
-				freeList.AddToEnd(p)
-				aProcessBecameFree.Signal(&processManagerLock)
-				processManagerLock.Unlock()
+        --
+          -- NOT IMPLEMENTED
+          processManagerLock.Lock()
+          (*p).status = FREE
+          freeList.AddToEnd(p)
+          aProcessBecameFree.Signal(&processManagerLock)
+          processManagerLock.Unlock()
         endMethod
+
 
     endBehavior
 
@@ -1060,25 +1068,19 @@ code Kernel
     -- This routine is called when a process is to be terminated.  It will
     -- free the resources held by this process and will terminate the
     -- current thread.
- 		var
-			oldIntStatus: int
-			i: int
-		currentThread.myProcess.exitStatus = exitStatus
-		oldIntStatus = SetInterruptsTo (DISABLED)
-		currentThread.isUserThread = false
-		oldIntStatus = SetInterruptsTo (oldIntStatus)
-		-- clean up resources
-		frameManager.ReturnAllFrames(&(currentThread.myProcess.addrSpace))
-		processManager.TurnIntoZombie(currentThread.myProcess)
-		for i = 0 to MAX_FILES_PER_PROCESS-1
-			if currentThread.myProcess.fileDescriptor[i] != null
-				fileManager.Close(currentThread.myProcess.fileDescriptor[i])
-				currentThread.myProcess.fileDescriptor[i] = null
-			endIf
-		endFor
-		currentThread.myProcess.myThread = null
-		currentThread.myProcess = null
-		ThreadFinish()
+    --
+      -- FatalError ("ProcessFinish is not implemented")
+      var
+        oldIntStatus: int
+      currentThread.myProcess.exitStatus = exitStatus
+      oldIntStatus = SetInterruptsTo (DISABLED)
+      currentThread.isUserThread = false
+      oldIntStatus = SetInterruptsTo (oldIntStatus)
+      frameManager.ReturnAllFrames(&(currentThread.myProcess.addrSpace))
+      processManager.TurnIntoZombie(currentThread.myProcess)
+      currentThread.myProcess.myThread = null
+      currentThread.myProcess = null
+      ThreadFinish()
     endFunction
 
 -----------------------------  FrameManager  ---------------------------------
@@ -1132,6 +1134,7 @@ code Kernel
       ----------  FrameManager . GetAFrame  ----------
 
       method GetAFrame () returns int
+        --
         -- Allocate a single frame and return its physical address.  If no frames
         -- are currently available, wait until the request can be completed.
         --
@@ -1158,56 +1161,43 @@ code Kernel
           return frameAddr
         endMethod
 
-      method GetAFrame2 () returns int
-        -- Allocate a single frame and return its physical address.  If no frames
-        -- are currently available, wait until the request can be completed.
-        --
-          var f, frameAddr: int
-
-          -- Find a free frame and allocate it...
-          f = framesInUse.FindZeroAndSet ()
-
-          -- Compute and return the physical address of the frame...
-          frameAddr = PHYSICAL_ADDRESS_OF_FIRST_PAGE_FRAME + (f * PAGE_SIZE)
-          -- printHexVar ("GetAFrame returning frameAddr", frameAddr)
-          return frameAddr
-        endMethod
-
       ----------  FrameManager . GetNewFrames  ----------
 
       method GetNewFrames (aPageTable: ptr to AddrSpace, numFramesNeeded: int)
-				var 
-					i:int
-					frameAddr: int
-				frameManagerLock.Lock()
-        while numberFreeFrames < numFramesNeeded
-          newFramesAvailable.Wait (&frameManagerLock)
-        endWhile
-				for i = 0 to numFramesNeeded - 1
-					frameAddr = self.GetAFrame2()
-					(*aPageTable).SetFrameAddr(i, frameAddr)
-				endFor
-				numberFreeFrames = numberFreeFrames - numFramesNeeded
-				(*aPageTable).numberOfPages = numFramesNeeded
-				frameManagerLock.Unlock()
-				endMethod
+          -- NOT IMPLEMENTED
+        var 
+          i:int
+          frameAddr: int
+          frameManagerLock.Lock()
+          while numberFreeFrames < numFramesNeeded
+            newFramesAvailable.Wait (&frameManagerLock)
+          endWhile
+          for i = 0 to numFramesNeeded - 1
+            frameAddr = PHYSICAL_ADDRESS_OF_FIRST_PAGE_FRAME + ((framesInUse.FindZeroAndSet()) * PAGE_SIZE)
+            (*aPageTable).SetFrameAddr(i, frameAddr)
+          endFor
+          numberFreeFrames = numberFreeFrames - numFramesNeeded
+          (*aPageTable).numberOfPages = numFramesNeeded
+          frameManagerLock.Unlock()
+        endMethod
 
       ----------  FrameManager . ReturnAllFrames  ----------
 
       method ReturnAllFrames (aPageTable: ptr to AddrSpace)
-				var 
-					i:int
-					bitIndex: int
-					frameAddr: int
-				frameManagerLock.Lock()
-				for i = 0 to (*aPageTable).numberOfPages - 1
-					frameAddr = (*aPageTable).ExtractFrameAddr(i)
-					bitIndex = (frameAddr - PHYSICAL_ADDRESS_OF_FIRST_PAGE_FRAME) / PAGE_SIZE
-					framesInUse.ClearBit(bitIndex)
-				endFor
-				numberFreeFrames = numberFreeFrames + aPageTable.numberOfPages
-				newFramesAvailable.Broadcast(&frameManagerLock)
-				frameManagerLock.Unlock()
+          -- NOT IMPLEMENTED
+        var 
+          i:int
+          bitNumber: int
+          frameAddr: int
+          frameManagerLock.Lock()
+          for i = 0 to (*aPageTable).numberOfPages - 1
+            frameAddr = (*aPageTable).ExtractFrameAddr(i)
+            bitNumber = (frameAddr - PHYSICAL_ADDRESS_OF_FIRST_PAGE_FRAME) / PAGE_SIZE
+            framesInUse.ClearBit(bitNumber)
+          endFor
+          numberFreeFrames = numberFreeFrames + aPageTable.numberOfPages
+          newFramesAvailable.Broadcast(&frameManagerLock)
+          frameManagerLock.Unlock()
         endMethod
 
     endBehavior
