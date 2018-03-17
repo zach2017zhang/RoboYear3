@@ -2668,9 +2668,6 @@ code Kernel
         -- This method writes out the buffer, if it is dirty.  This method
         -- assumes the caller already holds the fileManagerLock.
         --
-			if open==null
-				print("openisnull")
-			endIf
           if open.fcb.bufferIsDirty
             if open.fcb.relativeSectorInBuffer < 0
               FatalError ("FileManager.Flush: buffer is dirty but relativeSectorInBuffer =  -1")
