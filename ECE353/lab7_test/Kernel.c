@@ -1029,11 +1029,13 @@ code Kernel
         --
         -- This method is passed a ptr to a Process;  It moves it
         -- to the FREE list.
-				processManagerLock.Lock()
-				(*p).status = FREE
-				freeList.AddToEnd(p)
-				aProcessBecameFree.Signal(&processManagerLock)
-				processManagerLock.Unlock()
+        --
+          -- NOT IMPLEMENTED
+          processManagerLock.Lock()
+          (*p).status = FREE
+          freeList.AddToEnd(p)
+          aProcessBecameFree.Signal(&processManagerLock)
+          processManagerLock.Unlock()
         endMethod
 
     endBehavior
