@@ -951,74 +951,77 @@ code Kernel
         -- This method returns a new ProcessControlBlock; it will wait
         -- until one is available.
         --
-				var
-					nextProcessPtr: ptr to ProcessControlBlock
-				processManagerLock.Lock()
-				while(freeList.IsEmpty())
-					aProcessBecameFree.Wait(&processManagerLock)
-				endWhile
-				nextProcessPtr = freeList.Remove()
-				nextPid = nextPid + 1
-				(*nextProcessPtr).pid = nextPid
-				(*nextProcessPtr).status = ACTIVE
-				processManagerLock.Unlock()
-        return nextProcessPtr
+          -- NOT IMPLEMENTED
+        var
+          NewProcessPtr: ptr to ProcessControlBlock
+          processManagerLock.Lock()
+          while freeList.IsEmpty()
+            aProcessBecameFree.Wait(&processManagerLock)
+          endWhile
+          NewProcessPtr = freeList.Remove()
+          nextPid = nextPid + 1
+          (*NewProcessPtr).pid = nextPid
+          (*NewProcessPtr).status = ACTIVE
+          processManagerLock.Unlock()
+          return NewProcessPtr
         endMethod
-
+        
       ----------  ProcessManager . TurnIntoZombie  ----------
 
       method TurnIntoZombie (p: ptr to ProcessControlBlock)
-		var
-			i: int
-			parentPcb: ptr to ProcessControlBlock
-		processManager.processManagerLock.Lock()
+        var
+          i: int
+          parentPcb: ptr to ProcessControlBlock
+          
+          processManager.processManagerLock.Lock()
+          
+          -- deal with children
+          for i = 0 to MAX_NUMBER_OF_PROCESSES-1 by 1
+            if processManager.processTable[i].status == ZOMBIE && processManager.processTable[i].parentsPid == p.pid
+              processManager.processTable[i].status = FREE	
+              processManager.freeList.AddToEnd(&processManager.processTable[i])
+              processManager.aProcessBecameFree.Signal(&(processManager.processManagerLock))
+            endIf
+          endFor
+          
+          -- identify the parent and deal with the current process
+          for i = 0 to MAX_NUMBER_OF_PROCESSES-1 by 1
+            if processManager.processTable[i].pid == p.parentsPid -- locate parent while dealing with children
+              parentPcb = &(processManager.processTable[i])
+            endIf
+          endFor
+          if parentPcb != null && parentPcb.status == ACTIVE
+            p.status = ZOMBIE
+            processManager.aProcessDied.Broadcast(&(processManager.processManagerLock))
+          else
+            p.status = FREE
+            processManager.freeList.AddToEnd(p)
+            processManager.aProcessBecameFree.Signal(&(processManager.processManagerLock))	
+          endIf       
+          
+          processManager.processManagerLock.Unlock() 
+        endMethod
 
-		-- take care of children of p
-		for i = 0 to MAX_NUMBER_OF_PROCESSES-1 by 1
-			if processManager.processTable[i].pid == p.parentsPid -- locate parent while dealing with children
-				parentPcb = &(processManager.processTable[i])
-			endIf
-			if processManager.processTable[i].status == ZOMBIE && processManager.processTable[i].parentsPid == p.pid
-				processManager.processTable[i].status = FREE	
-				processManager.freeList.AddToEnd(&processManager.processTable[i])
-				processManager.aProcessBecameFree.Signal(&(processManager.processManagerLock))
-			endIf
-		endFor
-
-		-- handle parent of p, turn into zombie or free self
-		if parentPcb != null && parentPcb.status == ACTIVE
-			p.status = ZOMBIE
-			processManager.aProcessDied.Broadcast(&(processManager.processManagerLock))
-		else
-			p.status = FREE
-			processManager.freeList.AddToEnd(p)
-			processManager.aProcessBecameFree.Signal(&(processManager.processManagerLock))	
-		endIf
-
-		processManager.processManagerLock.Unlock()
-
-      endMethod
-
-      ----------  ProcessManager . TurnIntoZombie  ----------
+      ----------  ProcessManager . WaitForZombie  ----------
 
       method WaitForZombie (proc: ptr to ProcessControlBlock) returns int
-		var
-			procExitStatus: int
+          var
+            procExitStatus: int
 
-		processManager.processManagerLock.Lock()
-		
-		while proc.status != ZOMBIE
-			processManager.aProcessDied.Wait(&(processManager.processManagerLock))
-		endWhile
-	
-		procExitStatus = proc.exitStatus
-		proc.status = FREE
-		processManager.freeList.AddToEnd(proc)
-		processManager.aProcessBecameFree.Signal(&(processManager.processManagerLock))	
+          processManager.processManagerLock.Lock()
+          
+          while proc.status != ZOMBIE
+            processManager.aProcessDied.Wait(&(processManager.processManagerLock))
+          endWhile
+          
+          procExitStatus = proc.exitStatus
+          proc.status = FREE
+          processManager.freeList.AddToEnd(proc)
+          processManager.aProcessBecameFree.Signal(&(processManager.processManagerLock))	
 
-		processManager.processManagerLock.Unlock()
-		return procExitStatus
-      endMethod
+          processManager.processManagerLock.Unlock()
+          return procExitStatus
+        endMethod
 
       ----------  ProcessManager . FreeProcess  ----------
 
