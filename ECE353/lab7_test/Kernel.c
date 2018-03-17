@@ -1057,25 +1057,19 @@ code Kernel
     -- This routine is called when a process is to be terminated.  It will
     -- free the resources held by this process and will terminate the
     -- current thread.
- 		var
-			oldIntStatus: int
-			i: int
-		currentThread.myProcess.exitStatus = exitStatus
-		oldIntStatus = SetInterruptsTo (DISABLED)
-		currentThread.isUserThread = false
-		oldIntStatus = SetInterruptsTo (oldIntStatus)
-		-- clean up resources
-		frameManager.ReturnAllFrames(&(currentThread.myProcess.addrSpace))
-		processManager.TurnIntoZombie(currentThread.myProcess)
-		for i = 0 to MAX_FILES_PER_PROCESS-1
-			if currentThread.myProcess.fileDescriptor[i] != null
-				fileManager.Close(currentThread.myProcess.fileDescriptor[i])
-				currentThread.myProcess.fileDescriptor[i] = null
-			endIf
-		endFor
-		currentThread.myProcess.myThread = null
-		currentThread.myProcess = null
-		ThreadFinish()
+    --
+      -- FatalError ("ProcessFinish is not implemented")
+      var
+        oldIntStatus: int
+      currentThread.myProcess.exitStatus = exitStatus
+      oldIntStatus = SetInterruptsTo (DISABLED)
+      currentThread.isUserThread = false
+      oldIntStatus = SetInterruptsTo (oldIntStatus)
+      frameManager.ReturnAllFrames(&(currentThread.myProcess.addrSpace))
+      processManager.TurnIntoZombie(currentThread.myProcess)
+      currentThread.myProcess.myThread = null
+      currentThread.myProcess = null
+      ThreadFinish()
     endFunction
 
 -----------------------------  FrameManager  ---------------------------------
