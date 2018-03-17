@@ -24,8 +24,8 @@ code TestProgram4
     --     NUMBER_OF_ENVIRONMENT_PAGES = 0
 
       -- OpenTest1 ()
-      OpenTest2 ()
-      -- OpenCloseTest ()
+      -- OpenTest2 ()
+      OpenCloseTest ()
       -- CloseTest ()
       -- ReadTest1 ()
       -- ReadTest2 ()
